@@ -24,6 +24,8 @@ import database as db
 
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
+WEBHOOK_URL = os.getenv("WEBHOOK_URL")  # e.g. https://boldilia-bot.onrender.com
+PORT = int(os.getenv("PORT", 8080))
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -499,8 +501,17 @@ def main():
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(pledge_conv)
 
-    logger.info("Bot started. Waiting for messages...")
-    app.run_polling(drop_pending_updates=True)
+    if WEBHOOK_URL:
+        logger.info(f"Bot started in webhook mode on port {PORT}.")
+        app.run_webhook(
+            listen="0.0.0.0",
+            port=PORT,
+            url_path="/webhook",
+            webhook_url=f"{WEBHOOK_URL}/webhook",
+        )
+    else:
+        logger.info("Bot started in polling mode.")
+        app.run_polling(drop_pending_updates=True)
 
 
 if __name__ == "__main__":
