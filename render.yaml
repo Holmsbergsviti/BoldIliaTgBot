@@ -2,12 +2,13 @@ services:
   - type: web
     name: boldilia-bot
     runtime: python
+    pythonVersion: "3.12.0"
     buildCommand: pip install -r requirements.txt
     startCommand: python3 bot.py
     envVars:
       - key: BOT_TOKEN
-        sync: false       # paste your Telegram bot token in Render dashboard
+        sync: false
       - key: DATABASE_URL
-        sync: false       # paste your Supabase connection string in Render dashboard
+        sync: false
       - key: WEBHOOK_URL
-        sync: false       # paste your Render service URL, e.g. https://boldilia-bot.onrender.com
+        sync: false
