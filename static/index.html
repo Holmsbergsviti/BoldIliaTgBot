@@ -7,383 +7,332 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{
-  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sans-serif;
-  background:#0a0a1a;color:#fff;min-height:100vh;overflow-x:hidden;
-}
+body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sans-serif;
+  background:#0a0a1a;color:#fff;min-height:100vh;overflow-x:hidden}
 
-/* ── Animated background ── */
+/* ── Background ── */
 .bg{position:fixed;inset:0;z-index:0;
-  background:radial-gradient(ellipse at 15% 15%,rgba(124,58,237,.35) 0%,transparent 55%),
-             radial-gradient(ellipse at 85% 85%,rgba(236,72,153,.25) 0%,transparent 55%),
-             #0a0a1a;
-}
-.orb{position:absolute;border-radius:50%;filter:blur(90px);opacity:.35;animation:orb-float 10s ease-in-out infinite}
-.orb-1{width:420px;height:420px;background:#7c3aed;top:-130px;left:-130px;animation-delay:0s}
+  background:radial-gradient(ellipse at 15% 15%,rgba(124,58,237,.35),transparent 55%),
+             radial-gradient(ellipse at 85% 85%,rgba(236,72,153,.25),transparent 55%),#0a0a1a}
+.orb{position:absolute;border-radius:50%;filter:blur(90px);opacity:.3;animation:orb-float 10s ease-in-out infinite}
+.orb-1{width:420px;height:420px;background:#7c3aed;top:-130px;left:-130px}
 .orb-2{width:320px;height:320px;background:#ec4899;bottom:-80px;right:-80px;animation-delay:-4s}
 .orb-3{width:220px;height:220px;background:#f59e0b;top:45%;left:55%;animation-delay:-7s}
-@keyframes orb-float{
-  0%,100%{transform:translate(0,0) scale(1)}
-  33%{transform:translate(28px,-28px) scale(1.06)}
-  66%{transform:translate(-18px,18px) scale(.94)}
-}
+@keyframes orb-float{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(28px,-28px) scale(1.06)}66%{transform:translate(-18px,18px) scale(.94)}}
 
 /* ── Layout ── */
-.content{position:relative;z-index:1;padding:16px 16px 90px;max-width:480px;margin:0 auto}
+.content{position:relative;z-index:1;padding:14px 14px 100px;max-width:480px;margin:0 auto}
 
-/* ── Lang ── */
-.lang-bar{display:flex;justify-content:flex-end;gap:6px;margin-bottom:14px}
-.lang-btn{
-  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);
-  color:rgba(255,255,255,.45);border-radius:20px;padding:5px 16px;
-  font-size:.8rem;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.05em;
+/* ── Tab bar ── */
+.tab-bar{
+  position:fixed;bottom:0;left:0;right:0;z-index:200;
+  background:rgba(10,10,26,.85);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);
+  border-top:1px solid rgba(255,255,255,.08);
+  display:flex;padding:8px 20px calc(8px + env(safe-area-inset-bottom));gap:8px;
 }
-.lang-btn.active{
-  background:linear-gradient(135deg,#7c3aed,#ec4899);border-color:transparent;color:#fff;
-  box-shadow:0 0 18px rgba(124,58,237,.55);
+.tab-btn{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+  background:none;border:none;color:rgba(255,255,255,.3);cursor:pointer;
+  padding:6px;border-radius:14px;transition:all .25s;font-size:.62rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
 }
-
-/* ── Hero ── */
-.hero{text-align:center;margin-bottom:22px;padding-top:4px}
-.hero-icon{font-size:4.5rem;display:block;margin-bottom:10px;
-  animation:hero-in .7s cubic-bezier(.34,1.56,.64,1) both}
-@keyframes hero-in{from{transform:scale(0) rotate(-25deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
-.hero h1{
-  font-size:2.2rem;font-weight:900;
-  background:linear-gradient(135deg,#fff 0%,#f59e0b 45%,#ec4899 100%);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-  margin-bottom:6px;letter-spacing:-.02em;
-}
-.hero .sub{color:rgba(255,255,255,.45);font-size:.88rem;line-height:1.5}
-
-/* ── Glass card ── */
-.card{
-  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);
-  border-radius:24px;padding:20px;margin-bottom:14px;
-  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
-  box-shadow:0 8px 40px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.09);
-  position:relative;overflow:hidden;
-}
-.card::before{
-  content:'';position:absolute;top:0;left:0;right:0;height:1px;
-  background:linear-gradient(90deg,transparent,rgba(255,255,255,.25),transparent);
-}
-.card-title{
-  font-size:.68rem;font-weight:800;letter-spacing:.12em;
-  color:rgba(255,255,255,.35);text-transform:uppercase;margin-bottom:16px;
-}
-
-/* ── Progress ── */
-.prog-header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:14px}
-.prog-total-big{
-  font-size:2.5rem;font-weight:900;line-height:1;letter-spacing:-.03em;
-  background:linear-gradient(135deg,#fff,#f59e0b);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-}
-.prog-meta{text-align:right}
-.prog-pct{
-  font-size:1.3rem;font-weight:800;
+.tab-btn .tab-icon{font-size:1.5rem;line-height:1;transition:transform .25s}
+.tab-btn.active{color:#fff}
+.tab-btn.active .tab-icon{transform:scale(1.15)}
+.tab-btn.active .tab-label{
   background:linear-gradient(135deg,#a78bfa,#ec4899);
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
 }
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+/* ── Lang bar ── */
+.lang-bar{display:flex;justify-content:flex-end;gap:6px;margin-bottom:12px}
+.lang-btn{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.4);border-radius:20px;padding:5px 16px;font-size:.8rem;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.05em}
+.lang-btn.active{background:linear-gradient(135deg,#7c3aed,#ec4899);border-color:transparent;color:#fff;box-shadow:0 0 18px rgba(124,58,237,.55)}
+
+/* ── Hero ── */
+.hero{text-align:center;margin-bottom:18px;padding-top:4px}
+.hero-icon{font-size:4.5rem;display:block;margin-bottom:10px;animation:hero-in .7s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes hero-in{from{transform:scale(0) rotate(-25deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
+.hero h1{font-size:2.1rem;font-weight:900;background:linear-gradient(135deg,#fff 0%,#f59e0b 45%,#ec4899 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:6px;letter-spacing:-.02em}
+.hero .sub{color:rgba(255,255,255,.4);font-size:.88rem;line-height:1.5}
+
+/* ── Card ── */
+.card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:24px;padding:20px;margin-bottom:14px;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);box-shadow:0 8px 40px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.09);position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.22),transparent)}
+.card-title{font-size:.68rem;font-weight:800;letter-spacing:.12em;color:rgba(255,255,255,.3);text-transform:uppercase;margin-bottom:16px}
+
+/* ── Progress ── */
+.prog-header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:14px}
+.prog-total-big{font-size:2.4rem;font-weight:900;line-height:1;letter-spacing:-.03em;background:linear-gradient(135deg,#fff,#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.prog-meta{text-align:right}
+.prog-pct{font-size:1.3rem;font-weight:800;background:linear-gradient(135deg,#a78bfa,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .prog-goal-txt{font-size:.72rem;color:rgba(255,255,255,.3);margin-top:2px}
-.prog-track{
-  height:14px;background:rgba(255,255,255,.07);border-radius:999px;
-  overflow:visible;position:relative;margin-bottom:12px;
-}
-.prog-fill{
-  height:100%;border-radius:999px;
-  background:linear-gradient(90deg,#7c3aed,#ec4899,#f59e0b);
-  background-size:200% 100%;animation:shimmer 3s linear infinite;
-  width:0%;transition:width 1.3s cubic-bezier(.4,0,.2,1);
-  position:relative;
-}
+.prog-track{height:14px;background:rgba(255,255,255,.07);border-radius:999px;overflow:visible;position:relative;margin-bottom:10px}
+.prog-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#7c3aed,#ec4899,#f59e0b);background-size:200% 100%;animation:shimmer 3s linear infinite;width:0%;transition:width 1.3s cubic-bezier(.4,0,.2,1);position:relative}
 .prog-fill.glow{box-shadow:0 0 24px #ec4899,0 0 48px #7c3aed}
+.prog-fill.active::after{content:'✂️';position:absolute;right:-14px;top:50%;transform:translateY(-50%);font-size:1rem;filter:drop-shadow(0 0 8px #f59e0b)}
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
-.prog-fill::after{
-  content:'✂️';position:absolute;right:-14px;top:50%;transform:translateY(-50%);
-  font-size:1rem;filter:drop-shadow(0 0 8px #f59e0b);
-  opacity:0;transition:opacity .6s;
-}
-.prog-fill.active::after{opacity:1}
-.donors-pill{
-  display:none;align-items:center;gap:6px;
-  background:rgba(124,58,237,.18);border:1px solid rgba(124,58,237,.35);
-  border-radius:999px;padding:4px 14px;font-size:.78rem;color:rgba(255,255,255,.65);
-}
-.goal-badge{
-  display:none;margin-top:12px;padding:12px;border-radius:14px;
-  background:linear-gradient(135deg,rgba(245,158,11,.18),rgba(236,72,153,.18));
-  border:1px solid rgba(245,158,11,.4);text-align:center;font-weight:700;
-  animation:pulse-glow 2s ease-in-out infinite;
-}
+.donors-pill{display:none;align-items:center;background:rgba(124,58,237,.18);border:1px solid rgba(124,58,237,.35);border-radius:999px;padding:4px 14px;font-size:.78rem;color:rgba(255,255,255,.6);width:fit-content;margin-top:4px}
+.goal-badge{display:none;margin-top:12px;padding:12px;border-radius:14px;background:linear-gradient(135deg,rgba(245,158,11,.18),rgba(236,72,153,.18));border:1px solid rgba(245,158,11,.4);text-align:center;font-weight:700;animation:pulse-glow 2s ease-in-out infinite}
 @keyframes pulse-glow{0%,100%{box-shadow:0 0 18px rgba(245,158,11,.25)}50%{box-shadow:0 0 40px rgba(245,158,11,.55)}}
 
 /* ── Countdown ── */
 .countdown{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-.cd-unit{
-  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);
-  border-radius:18px;padding:16px 6px;text-align:center;position:relative;overflow:hidden;
-}
-.cd-unit::before{
-  content:'';position:absolute;inset:0;
-  background:linear-gradient(160deg,rgba(124,58,237,.1),rgba(236,72,153,.08));
-}
-.cd-val{
-  font-size:2.1rem;font-weight:900;display:block;line-height:1;
-  background:linear-gradient(180deg,#fff,rgba(255,255,255,.65));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-  position:relative;
-}
+.cd-unit{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:18px;padding:16px 6px;text-align:center;position:relative;overflow:hidden}
+.cd-unit::before{content:'';position:absolute;inset:0;background:linear-gradient(160deg,rgba(124,58,237,.1),rgba(236,72,153,.08))}
+.cd-val{font-size:2rem;font-weight:900;display:block;line-height:1;background:linear-gradient(180deg,#fff,rgba(255,255,255,.65));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;position:relative}
 .cd-val.bump{animation:flip .28s ease}
 @keyframes flip{0%{transform:scaleY(1)}45%{transform:scaleY(.65)}100%{transform:scaleY(1)}}
-.cd-lbl{font-size:.52rem;letter-spacing:.13em;color:rgba(255,255,255,.28);
-  font-weight:800;text-transform:uppercase;margin-top:5px;position:relative}
+.cd-lbl{font-size:.5rem;letter-spacing:.13em;color:rgba(255,255,255,.28);font-weight:800;text-transform:uppercase;margin-top:5px;position:relative}
 
-/* ── Pledge amounts ── */
+/* ── Pledge ── */
 .amounts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
-.amt-btn{
-  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);
-  border-radius:14px;color:rgba(255,255,255,.75);padding:13px 4px;
-  font-size:.84rem;font-weight:700;cursor:pointer;transition:all .22s;
-  position:relative;overflow:hidden;letter-spacing:.01em;
-}
-.amt-btn::after{
-  content:'';position:absolute;inset:0;
-  background:radial-gradient(circle at center,rgba(124,58,237,.45),transparent 70%);
-  opacity:0;transition:opacity .3s;
-}
-.amt-btn:hover{border-color:rgba(124,58,237,.5);transform:translateY(-2px);
-  box-shadow:0 8px 24px rgba(124,58,237,.2)}
+.amt-btn{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:14px;color:rgba(255,255,255,.75);padding:13px 4px;font-size:.84rem;font-weight:700;cursor:pointer;transition:all .22s;position:relative;overflow:hidden}
+.amt-btn::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at center,rgba(124,58,237,.45),transparent 70%);opacity:0;transition:opacity .3s}
+.amt-btn:hover{border-color:rgba(124,58,237,.5);transform:translateY(-2px);box-shadow:0 8px 24px rgba(124,58,237,.2)}
 .amt-btn:hover::after{opacity:1}
-.amt-btn.sel{
-  background:linear-gradient(135deg,rgba(124,58,237,.28),rgba(236,72,153,.28));
-  border-color:rgba(124,58,237,.9);color:#fff;
-  box-shadow:0 0 22px rgba(124,58,237,.4),inset 0 0 18px rgba(124,58,237,.1);
-  transform:translateY(-2px);
-}
+.amt-btn.sel{background:linear-gradient(135deg,rgba(124,58,237,.28),rgba(236,72,153,.28));border-color:rgba(124,58,237,.9);color:#fff;box-shadow:0 0 22px rgba(124,58,237,.4);transform:translateY(-2px)}
 .custom-wrap{margin-bottom:14px}
-.custom-wrap input{
-  width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);
-  border-radius:14px;color:#fff;padding:13px 16px;font-size:.95rem;outline:none;transition:all .22s;
-}
+.custom-wrap input{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:14px;color:#fff;padding:13px 16px;font-size:.95rem;outline:none;transition:all .22s}
 .custom-wrap input:focus{border-color:rgba(124,58,237,.8);box-shadow:0 0 22px rgba(124,58,237,.2)}
 .custom-wrap input::placeholder{color:rgba(255,255,255,.22)}
-.pledge-btn{
-  width:100%;
-  background:linear-gradient(135deg,#7c3aed,#ec4899);
-  border:none;border-radius:16px;color:#fff;padding:17px;
-  font-size:1.05rem;font-weight:800;cursor:pointer;transition:all .22s;
-  position:relative;overflow:hidden;
-  box-shadow:0 8px 34px rgba(124,58,237,.45);letter-spacing:.03em;
-}
-.pledge-btn::before{
-  content:'';position:absolute;inset:0;
-  background:linear-gradient(135deg,rgba(255,255,255,.22),transparent);
-  opacity:0;transition:opacity .2s;
-}
+.pledge-btn{width:100%;background:linear-gradient(135deg,#7c3aed,#ec4899);border:none;border-radius:16px;color:#fff;padding:17px;font-size:1.05rem;font-weight:800;cursor:pointer;transition:all .22s;position:relative;overflow:hidden;box-shadow:0 8px 34px rgba(124,58,237,.45);letter-spacing:.03em}
+.pledge-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.22),transparent);opacity:0;transition:opacity .2s}
 .pledge-btn:hover{transform:translateY(-2px);box-shadow:0 14px 44px rgba(124,58,237,.55)}
 .pledge-btn:hover::before{opacity:1}
 .pledge-btn:active{transform:scale(.98)}
-.pledge-btn:disabled{
-  background:rgba(255,255,255,.07);color:rgba(255,255,255,.25);
-  box-shadow:none;cursor:default;transform:none;
-}
+.pledge-btn:disabled{background:rgba(255,255,255,.07);color:rgba(255,255,255,.25);box-shadow:none;cursor:default;transform:none}
 .my-pledge{text-align:center;margin-top:14px;font-size:.84rem;color:rgba(255,255,255,.45);line-height:1.6}
 .my-pledge strong{color:#f59e0b}
-.remove-link{
-  display:inline-block;margin-left:8px;color:rgba(236,72,153,.8);cursor:pointer;
-  font-size:.78rem;border:1px solid rgba(236,72,153,.3);border-radius:20px;padding:2px 10px;
-  transition:all .2s;
-}
-.remove-link:hover{background:rgba(236,72,153,.15);border-color:rgba(236,72,153,.65)}
+.remove-link{display:inline-block;margin-left:8px;color:rgba(236,72,153,.8);cursor:pointer;font-size:.78rem;border:1px solid rgba(236,72,153,.3);border-radius:20px;padding:2px 10px;transition:all .2s}
+.remove-link:hover{background:rgba(236,72,153,.15)}
 
 /* ── Leaderboard ── */
-.lb-row{
-  display:flex;align-items:center;gap:12px;padding:11px 0;
-  border-bottom:1px solid rgba(255,255,255,.05);animation:slide-in .4s ease both;
-}
+.lb-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.05);animation:slide-in .4s ease both}
 .lb-row:last-child{border-bottom:none}
 @keyframes slide-in{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:none}}
 .lb-rank{font-size:1.1rem;min-width:26px;text-align:center}
-.lb-avatar{
-  width:38px;height:38px;border-radius:50%;flex-shrink:0;
-  background:linear-gradient(135deg,#7c3aed,#ec4899);
-  display:flex;align-items:center;justify-content:center;
-  font-weight:800;font-size:.95rem;
-}
-.lb-row:first-child .lb-avatar{
-  background:linear-gradient(135deg,#f59e0b,#f97316);
-  box-shadow:0 0 18px rgba(245,158,11,.5);
-}
+.lb-avatar{width:38px;height:38px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,#7c3aed,#ec4899);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.95rem}
+.lb-row:first-child .lb-avatar{background:linear-gradient(135deg,#f59e0b,#f97316);box-shadow:0 0 18px rgba(245,158,11,.5)}
 .lb-info{flex:1;min-width:0}
 .lb-name{font-size:.9rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .lb-uname{font-size:.72rem;color:rgba(255,255,255,.3);margin-top:1px}
-.lb-amt{
-  font-weight:800;font-size:.92rem;white-space:nowrap;
-  background:linear-gradient(135deg,#f59e0b,#ec4899);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-}
+.lb-amt{font-weight:800;font-size:.92rem;white-space:nowrap;background:linear-gradient(135deg,#f59e0b,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .lb-empty{text-align:center;color:rgba(255,255,255,.3);padding:18px 0;font-size:.88rem}
 
-/* ── Confetti canvas ── */
-#confetti-canvas{position:fixed;inset:0;z-index:500;pointer-events:none}
+/* ─────────────── WHEEL TAB ─────────────── */
 
-/* ── Crown overlay ── */
-#crown-overlay{
-  position:fixed;inset:0;z-index:600;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  background:rgba(0,0,0,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
-  opacity:0;pointer-events:none;transition:opacity .4s;padding:24px;
+/* Wheel canvas wrapper */
+.wheel-wrap{
+  position:relative;width:100%;aspect-ratio:1;max-width:360px;
+  margin:0 auto 10px;
 }
-#crown-overlay.show{opacity:1;pointer-events:all}
-.crown-icon{font-size:6rem;display:block;animation:none}
-.crown-icon.animate{animation:crown-pop .85s cubic-bezier(.34,1.56,.64,1) both}
-@keyframes crown-pop{
-  0%{transform:scale(0) rotate(-35deg);opacity:0}
-  60%{transform:scale(1.35) rotate(8deg);opacity:1}
-  100%{transform:scale(1) rotate(0);opacity:1}
+#wheelCanvas{width:100%;height:100%;display:block}
+
+/* Wheel status / spin button */
+.wheel-status{
+  text-align:center;padding:18px;
+  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);
+  border-radius:18px;margin-bottom:14px;
 }
-.crown-rays{
-  position:absolute;width:200px;height:200px;
-  animation:rays-spin 4s linear infinite;opacity:.6;
+.wheel-date{
+  font-size:.9rem;color:rgba(255,255,255,.5);line-height:1.6;
 }
-.crown-rays::before,.crown-rays::after{
-  content:'';position:absolute;inset:0;border-radius:50%;
-  background:conic-gradient(from 0deg,transparent 0deg,rgba(245,158,11,.4) 10deg,transparent 20deg,transparent 40deg,rgba(245,158,11,.4) 50deg,transparent 60deg,transparent 80deg,rgba(245,158,11,.4) 90deg,transparent 100deg,transparent 120deg,rgba(245,158,11,.4) 130deg,transparent 140deg,transparent 160deg,rgba(245,158,11,.4) 170deg,transparent 180deg,transparent 200deg,rgba(245,158,11,.4) 210deg,transparent 220deg,transparent 240deg,rgba(245,158,11,.4) 250deg,transparent 260deg,transparent 280deg,rgba(245,158,11,.4) 290deg,transparent 300deg,transparent 320deg,rgba(245,158,11,.4) 330deg,transparent 340deg,transparent 360deg);
+.wheel-date strong{color:#f59e0b}
+
+.spin-btn{
+  width:100%;padding:17px;border:none;border-radius:18px;
+  background:linear-gradient(135deg,#f59e0b,#ec4899,#7c3aed);
+  background-size:200% 200%;animation:spin-btn-anim 3s ease infinite;
+  color:#fff;font-size:1.1rem;font-weight:900;cursor:pointer;
+  box-shadow:0 8px 40px rgba(245,158,11,.5);letter-spacing:.03em;
+  position:relative;overflow:hidden;
 }
-@keyframes rays-spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
-.crown-center{position:relative;display:flex;align-items:center;justify-content:center;margin-bottom:8px}
-.crown-title{
-  font-size:2rem;font-weight:900;text-align:center;margin-bottom:8px;
+.spin-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.2),transparent)}
+.spin-btn:hover{transform:scale(1.02)}
+.spin-btn:active{transform:scale(.98)}
+@keyframes spin-btn-anim{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+.spin-btn:disabled{animation:none;background:rgba(255,255,255,.06);color:rgba(255,255,255,.25);box-shadow:none;cursor:default;transform:none}
+
+/* Winner card */
+.winner-card{
+  display:none;text-align:center;padding:28px 20px;
+  background:linear-gradient(135deg,rgba(245,158,11,.12),rgba(124,58,237,.12),rgba(236,72,153,.12));
+  border:1px solid rgba(245,158,11,.4);border-radius:24px;
+  box-shadow:0 0 50px rgba(245,158,11,.2),inset 0 1px 0 rgba(255,255,255,.12);
+  margin-bottom:14px;
+}
+.winner-card.show{display:block;animation:winner-in .7s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes winner-in{from{opacity:0;transform:scale(.8) translateY(30px)}to{opacity:1;transform:none}}
+.winner-crown{font-size:4rem;display:block;margin-bottom:8px;animation:spin-crown 2s ease-in-out infinite alternate}
+@keyframes spin-crown{from{transform:rotate(-8deg) scale(1)}to{transform:rotate(8deg) scale(1.1)}}
+.winner-title{font-size:1rem;font-weight:800;letter-spacing:.1em;color:rgba(255,255,255,.4);text-transform:uppercase;margin-bottom:10px}
+.winner-name{
+  font-size:2rem;font-weight:900;
   background:linear-gradient(135deg,#f59e0b,#fff,#f59e0b);
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-  animation:fade-up .5s .25s both;
+  margin-bottom:6px;
 }
-.crown-name{
-  font-size:1.25rem;font-weight:700;color:#fff;text-align:center;
-  animation:fade-up .5s .4s both;
-}
-.crown-sub{
-  font-size:.85rem;color:rgba(255,255,255,.45);text-align:center;margin-top:4px;
-  animation:fade-up .5s .55s both;
-}
-@keyframes fade-up{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
-.crown-close{
-  margin-top:30px;padding:14px 40px;
-  background:linear-gradient(135deg,#f59e0b,#ec4899);
-  border:none;border-radius:999px;color:#fff;font-weight:800;font-size:1.05rem;
-  cursor:pointer;animation:fade-up .5s .75s both;
-  box-shadow:0 8px 36px rgba(245,158,11,.45);letter-spacing:.03em;
-}
+.winner-amount{font-size:1.1rem;color:rgba(255,255,255,.6);margin-bottom:4px}
+.winner-amount strong{color:#f59e0b}
+.winner-sub{font-size:.8rem;color:rgba(255,255,255,.3);margin-top:8px}
+.winner-stars{font-size:1.4rem;letter-spacing:.1em;margin-top:12px}
 
-/* ── Success flash ── */
-#success-flash{
-  position:fixed;inset:0;z-index:450;pointer-events:none;opacity:0;
-  background:radial-gradient(circle at center,rgba(124,58,237,.35),transparent 65%);
-}
+/* Wheel legend */
+.wheel-legend{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:14px}
+.legend-item{display:flex;align-items:center;gap:8px;font-size:.8rem;padding:8px 10px;background:rgba(255,255,255,.03);border-radius:10px}
+.legend-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.legend-name{flex:1;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.legend-pct{color:rgba(255,255,255,.4);font-weight:700;font-size:.75rem}
+
+/* ── Crown overlay ── */
+#crown-overlay{position:fixed;inset:0;z-index:600;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,.82);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);opacity:0;pointer-events:none;transition:opacity .4s;padding:24px}
+#crown-overlay.show{opacity:1;pointer-events:all}
+.crown-center{position:relative;display:flex;align-items:center;justify-content:center;margin-bottom:10px}
+.crown-rays{position:absolute;width:220px;height:220px;animation:rays-spin 5s linear infinite;opacity:.55}
+.crown-rays::before{content:'';position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,transparent 0deg,rgba(245,158,11,.5) 8deg,transparent 16deg,transparent 36deg,rgba(245,158,11,.5) 44deg,transparent 52deg,transparent 72deg,rgba(245,158,11,.5) 80deg,transparent 88deg,transparent 108deg,rgba(245,158,11,.5) 116deg,transparent 124deg,transparent 144deg,rgba(245,158,11,.5) 152deg,transparent 160deg,transparent 180deg,rgba(245,158,11,.5) 188deg,transparent 196deg,transparent 216deg,rgba(245,158,11,.5) 224deg,transparent 232deg,transparent 252deg,rgba(245,158,11,.5) 260deg,transparent 268deg,transparent 288deg,rgba(245,158,11,.5) 296deg,transparent 304deg,transparent 324deg,rgba(245,158,11,.5) 332deg,transparent 340deg,transparent 360deg)}
+@keyframes rays-spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.crown-icon-big{font-size:7rem;display:block;filter:drop-shadow(0 0 30px #f59e0b)}
+.crown-icon-big.animate{animation:crown-pop .85s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes crown-pop{0%{transform:scale(0) rotate(-35deg);opacity:0}60%{transform:scale(1.3) rotate(8deg);opacity:1}100%{transform:scale(1) rotate(0);opacity:1}}
+.crown-winner-title{font-size:2.2rem;font-weight:900;text-align:center;margin-bottom:8px;background:linear-gradient(135deg,#f59e0b,#fff,#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:fade-up .5s .25s both}
+.crown-winner-name{font-size:1.4rem;font-weight:800;color:#fff;text-align:center;animation:fade-up .5s .4s both}
+.crown-winner-sub{font-size:.9rem;color:rgba(255,255,255,.5);text-align:center;margin-top:6px;animation:fade-up .5s .5s both}
+@keyframes fade-up{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+.crown-close{margin-top:30px;padding:14px 44px;background:linear-gradient(135deg,#f59e0b,#ec4899);border:none;border-radius:999px;color:#fff;font-weight:800;font-size:1.05rem;cursor:pointer;animation:fade-up .5s .7s both;box-shadow:0 8px 36px rgba(245,158,11,.45);letter-spacing:.03em}
+
+/* ── Overlays ── */
+#success-flash{position:fixed;inset:0;z-index:450;pointer-events:none;opacity:0;background:radial-gradient(circle at center,rgba(124,58,237,.35),transparent 65%)}
 #success-flash.flash{animation:flash-anim .55s ease}
 @keyframes flash-anim{0%{opacity:0}30%{opacity:1}100%{opacity:0}}
+canvas#confetti-canvas{position:fixed;inset:0;z-index:500;pointer-events:none}
 
 /* ── Toast ── */
-#toast{
-  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(90px);
-  background:rgba(20,20,35,.95);color:#fff;
-  border:1px solid rgba(255,255,255,.1);padding:13px 26px;border-radius:28px;
-  font-size:.9rem;font-weight:700;
-  box-shadow:0 10px 40px rgba(0,0,0,.45);
-  transition:transform .38s cubic-bezier(.34,1.56,.64,1);
-  z-index:999;pointer-events:none;white-space:nowrap;backdrop-filter:blur(24px);
-}
+#toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(90px);background:rgba(20,20,35,.95);color:#fff;border:1px solid rgba(255,255,255,.1);padding:13px 26px;border-radius:28px;font-size:.9rem;font-weight:700;box-shadow:0 10px 40px rgba(0,0,0,.45);transition:transform .38s cubic-bezier(.34,1.56,.64,1);z-index:999;pointer-events:none;white-space:nowrap;backdrop-filter:blur(24px)}
 #toast.show{transform:translateX(-50%) translateY(0)}
 </style>
 </head>
 <body>
 
-<div class="bg">
-  <div class="orb orb-1"></div>
-  <div class="orb orb-2"></div>
-  <div class="orb orb-3"></div>
-</div>
-
+<div class="bg"><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
 <canvas id="confetti-canvas"></canvas>
 <div id="success-flash"></div>
 
-<!-- Crown overlay -->
+<!-- Crown overlay (shown after spin) -->
 <div id="crown-overlay">
   <div class="crown-center">
     <div class="crown-rays"></div>
-    <span class="crown-icon" id="crownIcon">👑</span>
+    <span class="crown-icon-big" id="crownIcon">👑</span>
   </div>
-  <div class="crown-title" id="crownTitle"></div>
-  <div class="crown-name" id="crownName"></div>
-  <div class="crown-sub"  id="crownSub"></div>
+  <div class="crown-winner-title" id="crownTitle"></div>
+  <div class="crown-winner-name"  id="crownName"></div>
+  <div class="crown-winner-sub"   id="crownSub"></div>
   <button class="crown-close" id="crownClose" onclick="closeCrown()"></button>
 </div>
 
 <div class="content">
-
   <div class="lang-bar">
     <button class="lang-btn active" id="btnEN" onclick="setLang('en')">EN</button>
     <button class="lang-btn"        id="btnRU" onclick="setLang('ru')">RU</button>
   </div>
 
-  <div class="hero">
-    <span class="hero-icon">💈</span>
-    <h1 data-i="title"></h1>
-    <p class="sub" data-i="sub"></p>
-  </div>
+  <!-- ── HOME TAB ────────────────────────────── -->
+  <div id="tab-home" class="tab-content active">
+    <div class="hero">
+      <span class="hero-icon">💈</span>
+      <h1 data-i="title"></h1>
+      <p class="sub" data-i="sub"></p>
+    </div>
 
-  <!-- Progress -->
-  <div class="card">
-    <div class="card-title" data-i="progress"></div>
-    <div class="prog-header">
-      <div class="prog-total-big" id="totalAmt">0 RSD</div>
-      <div class="prog-meta">
-        <div class="prog-pct" id="pct">0%</div>
-        <div class="prog-goal-txt" data-i="goal_line"></div>
+    <!-- Progress -->
+    <div class="card">
+      <div class="card-title" data-i="progress"></div>
+      <div class="prog-header">
+        <div class="prog-total-big" id="totalAmt">0 RSD</div>
+        <div class="prog-meta">
+          <div class="prog-pct" id="pct">0%</div>
+          <div class="prog-goal-txt" data-i="goal_line"></div>
+        </div>
+      </div>
+      <div class="prog-track"><div class="prog-fill" id="progBar"></div></div>
+      <div class="donors-pill" id="donorPill"></div>
+      <div class="goal-badge" id="goalBadge" data-i="goal_reached"></div>
+    </div>
+
+    <!-- Countdown -->
+    <div class="card">
+      <div class="card-title" data-i="time_left"></div>
+      <div class="countdown">
+        <div class="cd-unit"><span class="cd-val" id="cdD">--</span><div class="cd-lbl" data-i="days"></div></div>
+        <div class="cd-unit"><span class="cd-val" id="cdH">--</span><div class="cd-lbl" data-i="hrs"></div></div>
+        <div class="cd-unit"><span class="cd-val" id="cdM">--</span><div class="cd-lbl" data-i="min"></div></div>
+        <div class="cd-unit"><span class="cd-val" id="cdS">--</span><div class="cd-lbl" data-i="sec"></div></div>
       </div>
     </div>
-    <div class="prog-track"><div class="prog-fill" id="progBar"></div></div>
-    <div class="donors-pill" id="donorPill"></div>
-    <div class="goal-badge" id="goalBadge" data-i="goal_reached"></div>
-  </div>
 
-  <!-- Countdown -->
-  <div class="card">
-    <div class="card-title" data-i="time_left"></div>
-    <div class="countdown">
-      <div class="cd-unit"><span class="cd-val" id="cdD">--</span><div class="cd-lbl" data-i="days"></div></div>
-      <div class="cd-unit"><span class="cd-val" id="cdH">--</span><div class="cd-lbl" data-i="hrs"></div></div>
-      <div class="cd-unit"><span class="cd-val" id="cdM">--</span><div class="cd-lbl" data-i="min"></div></div>
-      <div class="cd-unit"><span class="cd-val" id="cdS">--</span><div class="cd-lbl" data-i="sec"></div></div>
+    <!-- Pledge -->
+    <div class="card">
+      <div class="card-title" data-i="pledge_heading"></div>
+      <div class="amounts">
+        <button class="amt-btn" data-v="500">500 RSD</button>
+        <button class="amt-btn" data-v="1000">1 000 RSD</button>
+        <button class="amt-btn" data-v="3000">3 000 RSD</button>
+        <button class="amt-btn" data-v="5000">5 000 RSD</button>
+        <button class="amt-btn" data-v="10000">10 000 RSD</button>
+        <button class="amt-btn" data-v="15000">15 000 RSD</button>
+      </div>
+      <div class="custom-wrap">
+        <input type="number" id="customAmt" min="50"/>
+      </div>
+      <button class="pledge-btn" id="pledgeBtn" disabled data-i="pledge_btn"></button>
+      <div class="my-pledge" id="myPledge"></div>
     </div>
-  </div>
 
-  <!-- Pledge -->
-  <div class="card">
-    <div class="card-title" data-i="pledge_heading"></div>
-    <div class="amounts">
-      <button class="amt-btn" data-v="500">500 RSD</button>
-      <button class="amt-btn" data-v="1000">1 000 RSD</button>
-      <button class="amt-btn" data-v="3000">3 000 RSD</button>
-      <button class="amt-btn" data-v="5000">5 000 RSD</button>
-      <button class="amt-btn" data-v="10000">10 000 RSD</button>
-      <button class="amt-btn" data-v="15000">15 000 RSD</button>
+    <!-- Leaderboard -->
+    <div class="card">
+      <div class="card-title" data-i="leaderboard"></div>
+      <div id="leaderboard"></div>
     </div>
-    <div class="custom-wrap">
-      <input type="number" id="customAmt" min="50"/>
+  </div><!-- /tab-home -->
+
+  <!-- ── WHEEL TAB ───────────────────────────── -->
+  <div id="tab-wheel" class="tab-content">
+    <div class="card">
+      <div class="card-title" data-i="wheel_card_title"></div>
+      <div class="wheel-wrap">
+        <canvas id="wheelCanvas"></canvas>
+      </div>
+      <div class="wheel-legend" id="wheelLegend"></div>
     </div>
-    <button class="pledge-btn" id="pledgeBtn" disabled data-i="pledge_btn"></button>
-    <div class="my-pledge" id="myPledge"></div>
-  </div>
 
-  <!-- Leaderboard -->
-  <div class="card">
-    <div class="card-title" data-i="leaderboard"></div>
-    <div id="leaderboard"></div>
-  </div>
+    <!-- Status / spin button -->
+    <div class="wheel-status" id="wheelStatus">
+      <div class="wheel-date" id="wheelDateTxt"></div>
+    </div>
 
+    <!-- Winner (permanent) -->
+    <div class="winner-card" id="winnerCard">
+      <span class="winner-crown">👑</span>
+      <div class="winner-title" data-i="winner_title"></div>
+      <div class="winner-name"   id="winnerName"></div>
+      <div class="winner-amount" id="winnerAmount"></div>
+      <div class="winner-sub"    data-i="winner_sub"></div>
+      <div class="winner-stars">⭐ ⭐ ⭐</div>
+    </div>
+  </div><!-- /tab-wheel -->
+</div><!-- /content -->
+
+<!-- Tab bar -->
+<div class="tab-bar">
+  <button class="tab-btn active" id="tabBtnHome" onclick="switchTab('home')">
+    <span class="tab-icon">🏠</span>
+    <span class="tab-label" data-i="tab_home"></span>
+  </button>
+  <button class="tab-btn" id="tabBtnWheel" onclick="switchTab('wheel')">
+    <span class="tab-icon">🎡</span>
+    <span class="tab-label" data-i="tab_wheel"></span>
+  </button>
 </div>
 
 <div id="toast"></div>
@@ -395,33 +344,51 @@ const initData = tg?.initData || "";
 const GOAL = 30000;
 const DEADLINE = new Date("2026-08-29T00:00:00Z");
 
-/* ── i18n ─────────────────────────────────────────────────────────── */
+// ── i18n ──────────────────────────────────────────────────────────────────
 const T = {
   en:{
-    title:"Bald Ilia",sub:"Help us shave Ilia's head by August 29, 2026!",
-    progress:"Progress",goal_line:"Goal: 30,000 RSD",
-    goal_reached:"🎉 Goal reached! Ilia is going bald!",time_left:"Time Left",
-    days:"DAYS",hrs:"HRS",min:"MIN",sec:"SEC",
-    pledge_heading:"Pledge Amount",custom_placeholder:"Custom amount (RSD)",
-    pledge_btn:"Pledge Now 🪒",pledging:"Pledging…",
-    saved:"🎉 Pledge saved!",removed:"Pledge removed",net_err:"Network error",
-    confirm_remove:"Remove your pledge?",your_pledge:"Your pledge:",remove:"Remove",
-    leaderboard:"Leaderboard 🏆",no_pledges:"No pledges yet — be the first!",
-    donors_one:"donor",donors_many:"donors",
-    crown_title:"👑 New Leader!",crown_sub:"just took the top spot!",crown_close:"🔥 Let's go!",
+    tab_home:"Home", tab_wheel:"Wheel",
+    title:"Bald Ilia", sub:"Help us shave Ilia's head by August 29, 2026!",
+    progress:"Progress", goal_line:"Goal: 30,000 RSD",
+    goal_reached:"🎉 Goal reached! Ilia is going bald!",
+    time_left:"Time Left", days:"DAYS", hrs:"HRS", min:"MIN", sec:"SEC",
+    pledge_heading:"Pledge Amount", custom_placeholder:"Custom amount (RSD)",
+    pledge_btn:"Pledge Now 🪒", pledging:"Pledging…",
+    saved:"🎉 Pledge saved!", removed:"Pledge removed",
+    net_err:"Network error", confirm_remove:"Remove your pledge?",
+    your_pledge:"Your pledge:", remove:"Remove",
+    leaderboard:"Leaderboard 🏆", no_pledges:"No pledges yet — be the first!",
+    donors_one:"donor", donors_many:"donors",
+    crown_title:"👑 New Leader!", crown_sub:"just took the top spot!", crown_close:"🔥 Let's go!",
+    wheel_card_title:"Raffle Wheel",
+    wheel_spins_on:"Wheel spins on",
+    wheel_bigger_pledge:"Bigger pledge = bigger slice = better odds!",
+    spin_btn:"🎡 Spin the Wheel!", spinning:"Spinning…",
+    winner_title:"Raffle Winner", winner_sub:"Bald Ilia Raffle · August 29, 2026",
+    crown_winner_title:"🎡 We have a winner!",
+    pledged:"pledged",
   },
   ru:{
-    title:"Лысый Илья",sub:"Поможем обрить Илью до 29 августа 2026!",
-    progress:"Прогресс",goal_line:"Цель: 30 000 RSD",
-    goal_reached:"🎉 Цель достигнута! Илья идёт бриться!",time_left:"Осталось времени",
-    days:"ДН",hrs:"ЧАС",min:"МИН",sec:"СЕК",
-    pledge_heading:"Сумма пожертвования",custom_placeholder:"Своя сумма (RSD)",
-    pledge_btn:"Пожертвовать 🪒",pledging:"Отправляем…",
-    saved:"🎉 Пожертвование сохранено!",removed:"Пожертвование удалено",net_err:"Ошибка сети",
-    confirm_remove:"Удалить пожертвование?",your_pledge:"Ваше пожертвование:",remove:"Удалить",
-    leaderboard:"Таблица лидеров 🏆",no_pledges:"Пока нет пожертвований — будь первым!",
-    donors_one:"участник",donors_many:"участников",
-    crown_title:"👑 Новый лидер!",crown_sub:"захватил первое место!",crown_close:"🔥 Огонь!",
+    tab_home:"Главная", tab_wheel:"Колесо",
+    title:"Лысый Илья", sub:"Поможем обрить Илью до 29 августа 2026!",
+    progress:"Прогресс", goal_line:"Цель: 30 000 RSD",
+    goal_reached:"🎉 Цель достигнута! Илья идёт бриться!",
+    time_left:"Осталось", days:"ДН", hrs:"ЧАС", min:"МИН", sec:"СЕК",
+    pledge_heading:"Сумма пожертвования", custom_placeholder:"Своя сумма (RSD)",
+    pledge_btn:"Пожертвовать 🪒", pledging:"Отправляем…",
+    saved:"🎉 Пожертвование сохранено!", removed:"Пожертвование удалено",
+    net_err:"Ошибка сети", confirm_remove:"Удалить пожертвование?",
+    your_pledge:"Ваше пожертвование:", remove:"Удалить",
+    leaderboard:"Таблица лидеров 🏆", no_pledges:"Пока нет пожертвований — будь первым!",
+    donors_one:"участник", donors_many:"участников",
+    crown_title:"👑 Новый лидер!", crown_sub:"захватил первое место!", crown_close:"🔥 Огонь!",
+    wheel_card_title:"Колесо удачи",
+    wheel_spins_on:"Колесо вращается",
+    wheel_bigger_pledge:"Больше взнос = больше сектор = больше шансов!",
+    spin_btn:"🎡 Крутить колесо!", spinning:"Крутим…",
+    winner_title:"Победитель", winner_sub:"Розыгрыш Лысый Илья · 29 августа 2026",
+    crown_winner_title:"🎡 Есть победитель!",
+    pledged:"пожертвовал",
   },
 };
 const tgLang = tg?.initDataUnsafe?.user?.language_code || navigator.language || "en";
@@ -437,245 +404,472 @@ function setLang(l){
   updateDonorLine(lastDonors);
   renderMyPledge(lastMyPledge);
   renderLeaderboard(lastLeaderboard);
+  renderWheelStatus();
 }
 
-/* ── Confetti ─────────────────────────────────────────────────────── */
+// ── Tabs ──────────────────────────────────────────────────────────────────
+function switchTab(name){
+  document.querySelectorAll(".tab-content").forEach(el=>el.classList.remove("active"));
+  document.querySelectorAll(".tab-btn").forEach(el=>el.classList.remove("active"));
+  document.getElementById("tab-"+name).classList.add("active");
+  document.getElementById("tabBtn"+name.charAt(0).toUpperCase()+name.slice(1)).classList.add("active");
+  if(name==="wheel") initWheelTab();
+  tg?.HapticFeedback?.selectionChanged();
+}
+
+// ── Confetti ──────────────────────────────────────────────────────────────
 const cc = document.getElementById("confetti-canvas");
-const cx = cc.getContext("2d");
+const cx2 = cc.getContext("2d");
 let particles = [];
 function resizeCC(){ cc.width=innerWidth; cc.height=innerHeight; }
 window.addEventListener("resize", resizeCC); resizeCC();
-
-function spawnConfetti(cx2, cy2, count=80, gold=false){
+function spawnConfetti(ox,oy,count=80,gold=false){
   const colors = gold
-    ? ["#f59e0b","#fbbf24","#fcd34d","#fff7","#f97316","#fef9c3"]
+    ? ["#f59e0b","#fbbf24","#fcd34d","#fff7","#f97316"]
     : ["#7c3aed","#ec4899","#f59e0b","#60a5fa","#34d399","#f87171","#fff"];
   for(let i=0;i<count;i++){
-    const angle = Math.random()*Math.PI*2;
-    const spd = gold ? 5+Math.random()*12 : 3+Math.random()*8;
-    particles.push({
-      x:cx2, y:cy2,
-      vx:Math.cos(angle)*spd, vy:Math.sin(angle)*spd-(gold?8:4),
-      color:colors[Math.random()*colors.length|0],
-      sz:4+Math.random()*(gold?9:6),
-      shape:Math.random()<.5?"c":"r",
-      rot:Math.random()*Math.PI*2,
-      rSpd:(Math.random()-.5)*.32,
-      alpha:1, g:.18+Math.random()*.1, drag:.97,
-    });
+    const a=Math.random()*Math.PI*2, spd=gold?5+Math.random()*12:3+Math.random()*8;
+    particles.push({x:ox,y:oy,vx:Math.cos(a)*spd,vy:Math.sin(a)*spd-(gold?8:4),
+      color:colors[Math.random()*colors.length|0],sz:4+Math.random()*(gold?9:6),
+      shape:Math.random()<.5?"c":"r",rot:Math.random()*Math.PI*2,rSpd:(Math.random()-.5)*.32,
+      alpha:1,g:.18+Math.random()*.1,drag:.97});
   }
 }
 function tickParticles(){
-  cx.clearRect(0,0,cc.width,cc.height);
-  particles = particles.filter(p=>p.alpha>.01);
+  cx2.clearRect(0,0,cc.width,cc.height);
+  particles=particles.filter(p=>p.alpha>.01);
   for(const p of particles){
-    p.vy+=p.g; p.vx*=p.drag; p.vy*=p.drag;
-    p.x+=p.vx; p.y+=p.vy; p.rot+=p.rSpd;
-    p.alpha -= p.y>cc.height ? .06 : .007;
-    cx.save();
-    cx.globalAlpha=p.alpha; cx.translate(p.x,p.y); cx.rotate(p.rot);
-    cx.fillStyle=p.color;
-    if(p.shape==="c"){ cx.beginPath(); cx.arc(0,0,p.sz/2,0,Math.PI*2); cx.fill(); }
-    else { cx.fillRect(-p.sz/2,-p.sz/4,p.sz,p.sz/2); }
-    cx.restore();
+    p.vy+=p.g; p.vx*=p.drag; p.vy*=p.drag; p.x+=p.vx; p.y+=p.vy; p.rot+=p.rSpd;
+    p.alpha-=p.y>cc.height?.06:.007;
+    cx2.save(); cx2.globalAlpha=p.alpha; cx2.translate(p.x,p.y); cx2.rotate(p.rot);
+    cx2.fillStyle=p.color;
+    if(p.shape==="c"){cx2.beginPath();cx2.arc(0,0,p.sz/2,0,Math.PI*2);cx2.fill();}
+    else{cx2.fillRect(-p.sz/2,-p.sz/4,p.sz,p.sz/2);}
+    cx2.restore();
   }
   requestAnimationFrame(tickParticles);
 }
 tickParticles();
 
-/* ── Crown overlay ────────────────────────────────────────────────── */
-function showCrown(name, amount){
-  document.getElementById("crownTitle").textContent = t("crown_title");
+// ── Crown overlay ─────────────────────────────────────────────────────────
+function showCrownOverlay(name, amount, titleKey){
+  document.getElementById("crownTitle").textContent = t(titleKey||"crown_title");
   document.getElementById("crownName").textContent  = name;
-  document.getElementById("crownSub").textContent   = `${amount.toLocaleString()} RSD — ${t("crown_sub")}`;
+  document.getElementById("crownSub").textContent   = `${amount.toLocaleString()} RSD`;
   document.getElementById("crownClose").textContent = t("crown_close");
-  const icon = document.getElementById("crownIcon");
+  const icon=document.getElementById("crownIcon");
   icon.classList.remove("animate"); void icon.offsetWidth; icon.classList.add("animate");
   document.getElementById("crown-overlay").classList.add("show");
   tg?.HapticFeedback?.notificationOccurred("success");
-  // Burst from center
-  spawnConfetti(cc.width/2, cc.height/2, 180, true);
-  // Second wave
-  setTimeout(()=>spawnConfetti(cc.width/2, cc.height/2, 120, true), 350);
+  spawnConfetti(cc.width/2, cc.height/2, 200, true);
+  setTimeout(()=>spawnConfetti(cc.width/2, cc.height/2, 150, true), 400);
 }
-function closeCrown(){
-  document.getElementById("crown-overlay").classList.remove("show");
-}
+function closeCrown(){ document.getElementById("crown-overlay").classList.remove("show"); }
 
-/* ── Amount picker ────────────────────────────────────────────────── */
+// ── Amount picker ─────────────────────────────────────────────────────────
 let selectedAmt = null;
 document.querySelectorAll(".amt-btn").forEach(btn=>{
   btn.addEventListener("click",()=>{
     document.querySelectorAll(".amt-btn").forEach(b=>b.classList.remove("sel"));
     btn.classList.add("sel");
-    selectedAmt = parseInt(btn.dataset.v);
-    document.getElementById("customAmt").value = "";
+    selectedAmt=parseInt(btn.dataset.v);
+    document.getElementById("customAmt").value="";
     updatePledgeBtn();
     tg?.HapticFeedback?.selectionChanged();
   });
 });
 document.getElementById("customAmt").addEventListener("input",e=>{
   document.querySelectorAll(".amt-btn").forEach(b=>b.classList.remove("sel"));
-  selectedAmt = parseInt(e.target.value)||null;
+  selectedAmt=parseInt(e.target.value)||null;
   updatePledgeBtn();
 });
-function updatePledgeBtn(){
-  document.getElementById("pledgeBtn").disabled = !(selectedAmt && selectedAmt>=50);
-}
+function updatePledgeBtn(){ document.getElementById("pledgeBtn").disabled=!(selectedAmt&&selectedAmt>=50); }
 
-/* ── Pledge ───────────────────────────────────────────────────────── */
-let prevTopAmt  = 0;
-let prevTopName = "";
-let lastLeaderboard = [];
-
+// ── Pledge ────────────────────────────────────────────────────────────────
+let prevTopAmt=0, prevTopName="", lastLeaderboard=[];
 document.getElementById("pledgeBtn").addEventListener("click", async()=>{
-  if(!selectedAmt || selectedAmt<50) return;
-  const btn = document.getElementById("pledgeBtn");
+  if(!selectedAmt||selectedAmt<50) return;
+  const btn=document.getElementById("pledgeBtn");
   btn.disabled=true; btn.textContent=t("pledging");
-  const myName = tg?.initDataUnsafe?.user?.first_name || "";
-  const wasTopAmt  = prevTopAmt;
-  const wasTopName = prevTopName;
-
+  const myName=tg?.initDataUnsafe?.user?.first_name||"";
+  const wasTopAmt=prevTopAmt, wasTopName=prevTopName;
   try{
-    const res  = await fetch("/api/pledge",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({initData,amount:selectedAmt})});
-    const data = await res.json();
+    const res=await fetch("/api/pledge",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({initData,amount:selectedAmt})});
+    const data=await res.json();
     if(data.ok){
-      // flash
-      const fl = document.getElementById("success-flash");
+      const fl=document.getElementById("success-flash");
       fl.classList.remove("flash"); void fl.offsetWidth; fl.classList.add("flash");
-      updateProgress(data.total, data.donors, data.goal_reached);
+      updateProgress(data.total,data.donors,data.goal_reached);
       renderMyPledge(selectedAmt);
-
-      // reload leaderboard
-      const lb = await (await fetch("/api/leaderboard")).json();
+      const lb=await(await fetch("/api/leaderboard")).json();
       renderLeaderboard(lb);
-
-      const newTop = lb[0];
-      const iAmTop = newTop && myName && newTop.name === myName;
-      const outbid = selectedAmt > wasTopAmt || (iAmTop && wasTopName && wasTopName !== myName);
-
-      if(iAmTop && outbid){
-        setTimeout(()=>showCrown(myName, selectedAmt), 420);
-      } else {
-        spawnConfetti(cc.width/2, cc.height*.65, 90, false);
-        toast(t("saved"));
-        tg?.HapticFeedback?.notificationOccurred("success");
-      }
-    } else {
-      toast(data.error||"Error");
-      tg?.HapticFeedback?.notificationOccurred("error");
-    }
+      const newTop=lb[0];
+      const iAmTop=newTop&&myName&&newTop.name===myName;
+      const outbid=selectedAmt>wasTopAmt||(iAmTop&&wasTopName&&wasTopName!==myName);
+      if(iAmTop&&outbid){ setTimeout(()=>showCrownOverlay(myName,selectedAmt,"crown_title"),420); }
+      else{ spawnConfetti(cc.width/2,cc.height*.65,90,false); toast(t("saved")); tg?.HapticFeedback?.notificationOccurred("success"); }
+      loadWheelData();
+    } else { toast(data.error||"Error"); tg?.HapticFeedback?.notificationOccurred("error"); }
   } catch{ toast(t("net_err")); }
   btn.textContent=t("pledge_btn"); updatePledgeBtn();
 });
 
-/* ── Remove pledge ────────────────────────────────────────────────── */
-let lastMyPledge = null;
+// ── Remove pledge ─────────────────────────────────────────────────────────
+let lastMyPledge=null;
 async function removePledge(){
-  const ok = await new Promise(r=>{
-    if(tg) tg.showConfirm(t("confirm_remove"),r);
-    else r(confirm(t("confirm_remove")));
-  });
+  const ok=await new Promise(r=>{ if(tg)tg.showConfirm(t("confirm_remove"),r); else r(confirm(t("confirm_remove"))); });
   if(!ok) return;
   try{
-    const res  = await fetch("/api/remove-pledge",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({initData})});
-    const data = await res.json();
-    if(data.ok){
-      tg?.HapticFeedback?.notificationOccurred("warning");
-      toast(t("removed")); lastMyPledge=null;
-      document.getElementById("myPledge").innerHTML="";
-      loadStatus(); loadLeaderboard();
-    }
+    const res=await fetch("/api/remove-pledge",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({initData})});
+    const data=await res.json();
+    if(data.ok){ tg?.HapticFeedback?.notificationOccurred("warning"); toast(t("removed")); lastMyPledge=null; document.getElementById("myPledge").innerHTML=""; loadStatus(); loadLeaderboard(); loadWheelData(); }
   } catch{ toast(t("net_err")); }
 }
 function renderMyPledge(amount){
   lastMyPledge=amount;
   if(!amount){ document.getElementById("myPledge").innerHTML=""; return; }
-  document.getElementById("myPledge").innerHTML=
-    `${t("your_pledge")} <strong>${amount.toLocaleString()} RSD</strong>`
-    +`<span class="remove-link" onclick="removePledge()"> ${t("remove")}</span>`;
+  document.getElementById("myPledge").innerHTML=`${t("your_pledge")} <strong>${amount.toLocaleString()} RSD</strong><span class="remove-link" onclick="removePledge()"> ${t("remove")}</span>`;
 }
 
-/* ── Progress ─────────────────────────────────────────────────────── */
-let lastDonors = null;
+// ── Progress ──────────────────────────────────────────────────────────────
+let lastDonors=null;
 function updateDonorLine(n){
   lastDonors=n;
-  const pill = document.getElementById("donorPill");
-  if(n==null){ pill.style.display="none"; return; }
+  const pill=document.getElementById("donorPill");
+  if(n==null){pill.style.display="none";return;}
   pill.style.display="inline-flex";
-  const w = lang==="ru" ? (n===1?T.ru.donors_one:T.ru.donors_many) : (n===1?T.en.donors_one:T.en.donors_many);
-  pill.textContent = `${n} ${w}`;
+  const w=lang==="ru"?(n===1?T.ru.donors_one:T.ru.donors_many):(n===1?T.en.donors_one:T.en.donors_many);
+  pill.textContent=`${n} ${w}`;
 }
-function updateProgress(total, donors, goalReached){
-  const pct = Math.min(total/GOAL*100,100);
-  const bar = document.getElementById("progBar");
-  bar.style.width = pct+"%";
-  bar.classList.toggle("glow", pct>=100);
-  bar.classList.toggle("active", pct>0 && pct<100);
-  document.getElementById("pct").textContent       = (total/GOAL*100).toFixed(1)+"%";
-  document.getElementById("totalAmt").textContent  = total.toLocaleString()+" RSD";
-  document.getElementById("goalBadge").style.display = goalReached?"block":"none";
+function updateProgress(total,donors,goalReached){
+  const pct=Math.min(total/GOAL*100,100);
+  const bar=document.getElementById("progBar");
+  bar.style.width=pct+"%"; bar.classList.toggle("glow",pct>=100); bar.classList.toggle("active",pct>0&&pct<100);
+  document.getElementById("pct").textContent=(total/GOAL*100).toFixed(1)+"%";
+  document.getElementById("totalAmt").textContent=total.toLocaleString()+" RSD";
+  document.getElementById("goalBadge").style.display=goalReached?"block":"none";
   updateDonorLine(donors);
 }
-async function loadStatus(){
-  try{ const d=await(await fetch("/api/status")).json(); updateProgress(d.total,d.donors,d.goal_reached); }catch{}
-}
-async function loadMyPledge(){
-  if(!initData) return;
-  try{ const d=await(await fetch(`/api/my-pledge?initData=${encodeURIComponent(initData)}`)).json(); if(d.amount) renderMyPledge(d.amount); }catch{}
-}
+async function loadStatus(){ try{const d=await(await fetch("/api/status")).json();updateProgress(d.total,d.donors,d.goal_reached);}catch{} }
+async function loadMyPledge(){ if(!initData)return; try{const d=await(await fetch(`/api/my-pledge?initData=${encodeURIComponent(initData)}`)).json();if(d.amount)renderMyPledge(d.amount);}catch{} }
 
-/* ── Leaderboard ──────────────────────────────────────────────────── */
+// ── Leaderboard ───────────────────────────────────────────────────────────
 function renderLeaderboard(rows){
-  lastLeaderboard = rows;
-  if(rows.length){ prevTopAmt=rows[0].amount; prevTopName=rows[0].name; }
+  lastLeaderboard=rows;
+  if(rows.length){prevTopAmt=rows[0].amount;prevTopName=rows[0].name;}
   const medals=["🥇","🥈","🥉"];
   const lb=document.getElementById("leaderboard");
   lb.innerHTML="";
-  if(!rows.length){ lb.innerHTML=`<div class="lb-empty">${t("no_pledges")}</div>`; return; }
+  if(!rows.length){lb.innerHTML=`<div class="lb-empty">${t("no_pledges")}</div>`;return;}
   rows.forEach((r,i)=>{
-    const div=document.createElement("div"); div.className="lb-row";
-    div.style.animationDelay=`${i*55}ms`;
+    const div=document.createElement("div");div.className="lb-row";div.style.animationDelay=`${i*55}ms`;
     const name=r.name||(r.username?"@"+r.username:"—");
     const init=(name[0]||"?").toUpperCase();
-    div.innerHTML=
-      `<span class="lb-rank">${medals[i]||(i+1)}</span>`
-      +`<div class="lb-avatar">${esc(init)}</div>`
-      +`<div class="lb-info"><div class="lb-name">${esc(name)}</div>${r.username?`<div class="lb-uname">@${esc(r.username)}</div>`:""}</div>`
-      +`<span class="lb-amt">${r.amount.toLocaleString()} RSD</span>`;
+    div.innerHTML=`<span class="lb-rank">${medals[i]||(i+1)}</span><div class="lb-avatar">${esc(init)}</div><div class="lb-info"><div class="lb-name">${esc(name)}</div>${r.username?`<div class="lb-uname">@${esc(r.username)}</div>`:""}</div><span class="lb-amt">${r.amount.toLocaleString()} RSD</span>`;
     lb.appendChild(div);
   });
 }
-async function loadLeaderboard(){
-  try{ renderLeaderboard(await(await fetch("/api/leaderboard")).json()); }catch{}
-}
-function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+async function loadLeaderboard(){ try{renderLeaderboard(await(await fetch("/api/leaderboard")).json());}catch{} }
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
 
-/* ── Countdown ────────────────────────────────────────────────────── */
+// ── Countdown ─────────────────────────────────────────────────────────────
 const prev={};
 function tick(){
   const diff=Math.max(0,Math.floor((DEADLINE-Date.now())/1000));
-  [["D",Math.floor(diff/86400)],["H",Math.floor(diff%86400/3600)],
-   ["M",Math.floor(diff%3600/60)],["S",diff%60]].forEach(([k,v])=>{
-    const el=document.getElementById("cd"+k);
-    const s=String(v).padStart(2,"0");
-    if(prev[k]!==s){ el.textContent=s; el.classList.remove("bump"); void el.offsetWidth; el.classList.add("bump"); prev[k]=s; }
+  [["D",Math.floor(diff/86400)],["H",Math.floor(diff%86400/3600)],["M",Math.floor(diff%3600/60)],["S",diff%60]].forEach(([k,v])=>{
+    const el=document.getElementById("cd"+k), s=String(v).padStart(2,"0");
+    if(prev[k]!==s){el.textContent=s;el.classList.remove("bump");void el.offsetWidth;el.classList.add("bump");prev[k]=s;}
   });
 }
 setInterval(tick,1000); tick();
 
-/* ── Toast ────────────────────────────────────────────────────────── */
+// ── Toast ─────────────────────────────────────────────────────────────────
 let tt;
-function toast(msg){
-  const el=document.getElementById("toast");
-  el.textContent=msg; el.classList.add("show");
-  clearTimeout(tt); tt=setTimeout(()=>el.classList.remove("show"),2600);
+function toast(msg){ const el=document.getElementById("toast");el.textContent=msg;el.classList.add("show");clearTimeout(tt);tt=setTimeout(()=>el.classList.remove("show"),2600); }
+
+// ─────────────────────────── WHEEL ────────────────────────────────────────
+
+const WHEEL_COLORS=[
+  "#7c3aed","#ec4899","#f59e0b","#10b981","#3b82f6",
+  "#ef4444","#a78bfa","#34d399","#f97316","#60a5fa",
+  "#8b5cf6","#fbbf24","#06b6d4","#84cc16","#fb7185",
+];
+
+let wheelSlices = [];
+let wheelAngle  = 0;
+let isSpinning  = false;
+let spinRAF     = null;
+let spinStartTS = null;
+let spinFrom    = 0;
+let spinTo      = 0;
+const SPIN_DUR  = 7500; // ms
+
+// Resize wheel canvas
+function resizeWheel(){
+  const canvas=document.getElementById("wheelCanvas");
+  const size=canvas.offsetWidth;
+  canvas.width=size; canvas.height=size;
+  drawWheel();
+}
+window.addEventListener("resize",resizeWheel);
+
+// Draw the wheel
+function drawWheel(){
+  const canvas=document.getElementById("wheelCanvas");
+  if(!canvas.width) return;
+  const ctx=canvas.getContext("2d");
+  const W=canvas.width, H=canvas.height;
+  const cx=W/2, cy=H/2;
+  const r=Math.min(cx,cy)-18;
+  ctx.clearRect(0,0,W,H);
+
+  // Outer glow ring
+  ctx.beginPath(); ctx.arc(cx,cy,r+10,0,Math.PI*2);
+  ctx.strokeStyle="rgba(124,58,237,0.25)"; ctx.lineWidth=14; ctx.stroke();
+  ctx.strokeStyle="rgba(236,72,153,0.18)"; ctx.lineWidth=6; ctx.stroke();
+
+  if(!wheelSlices.length){
+    // Empty placeholder
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);
+    ctx.fillStyle="rgba(255,255,255,0.04)"; ctx.fill();
+    ctx.strokeStyle="rgba(255,255,255,0.1)"; ctx.lineWidth=2; ctx.stroke();
+    ctx.fillStyle="rgba(255,255,255,0.2)"; ctx.font=`bold ${r*.14}px -apple-system,sans-serif`;
+    ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillText("?", cx, cy);
+    drawPointer(ctx,cx,cy,r); return;
+  }
+
+  let startAngle = wheelAngle - Math.PI/2;
+  wheelSlices.forEach((s,i)=>{
+    const sliceAngle = s.pct * Math.PI * 2;
+    const endAngle   = startAngle + sliceAngle;
+    const color      = WHEEL_COLORS[i % WHEEL_COLORS.length];
+
+    // Slice fill
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,r,startAngle,endAngle); ctx.closePath();
+    // Radial gradient per slice
+    const grd=ctx.createRadialGradient(cx,cy,0,cx,cy,r);
+    grd.addColorStop(0, lighten(color,.35));
+    grd.addColorStop(1, color);
+    ctx.fillStyle=grd; ctx.fill();
+
+    // Divider
+    ctx.strokeStyle="rgba(0,0,0,0.35)"; ctx.lineWidth=2; ctx.stroke();
+
+    // Label
+    const midAngle=startAngle+sliceAngle/2;
+    if(sliceAngle>0.12){
+      ctx.save();
+      ctx.translate(cx,cy); ctx.rotate(midAngle);
+      ctx.textAlign="right"; ctx.textBaseline="middle";
+      ctx.fillStyle="#fff";
+      ctx.shadowColor="rgba(0,0,0,.7)"; ctx.shadowBlur=5;
+      const fs=Math.min(14, Math.max(9, r*0.1));
+      ctx.font=`bold ${fs}px -apple-system,sans-serif`;
+      const label=s.name.split(" ")[0].substring(0,10);
+      ctx.fillText(label, r-14, 0);
+      if(sliceAngle>0.3){
+        ctx.font=`${fs-2}px -apple-system,sans-serif`;
+        ctx.fillStyle="rgba(255,255,255,0.75)";
+        ctx.fillText(`${(s.pct*100).toFixed(1)}%`, r-14, fs+3);
+      }
+      ctx.restore();
+    }
+    startAngle = endAngle;
+  });
+
+  // Outer border ring
+  ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);
+  ctx.strokeStyle="rgba(255,255,255,0.18)"; ctx.lineWidth=3; ctx.stroke();
+
+  // Center hub
+  const hubR=r*0.11;
+  ctx.beginPath(); ctx.arc(cx,cy,hubR,0,Math.PI*2);
+  const hubGrd=ctx.createRadialGradient(cx-hubR*.3,cy-hubR*.3,0,cx,cy,hubR);
+  hubGrd.addColorStop(0,"#fff"); hubGrd.addColorStop(1,"rgba(200,200,200,.6)");
+  ctx.fillStyle=hubGrd; ctx.fill();
+  ctx.strokeStyle="rgba(0,0,0,.3)"; ctx.lineWidth=2; ctx.stroke();
+
+  drawPointer(ctx,cx,cy,r);
 }
 
-/* ── Init ─────────────────────────────────────────────────────────── */
+function drawPointer(ctx,cx,cy,r){
+  // Triangle pointing down into wheel at top
+  const tipY  = cy - r + 2;
+  const baseY = cy - r - 20;
+  ctx.beginPath();
+  ctx.moveTo(cx,   tipY);
+  ctx.lineTo(cx-11,baseY);
+  ctx.lineTo(cx+11,baseY);
+  ctx.closePath();
+  const pg=ctx.createLinearGradient(cx,baseY,cx,tipY);
+  pg.addColorStop(0,"#fff"); pg.addColorStop(1,"#f59e0b");
+  ctx.fillStyle=pg;
+  ctx.shadowColor="rgba(245,158,11,.9)"; ctx.shadowBlur=16;
+  ctx.fill(); ctx.shadowBlur=0;
+  ctx.strokeStyle="rgba(0,0,0,.3)"; ctx.lineWidth=1.5; ctx.stroke();
+}
+
+function lighten(hex, amt){
+  const n=parseInt(hex.slice(1),16);
+  const r=Math.min(255,(n>>16)+Math.round(255*amt));
+  const g=Math.min(255,((n>>8)&0xff)+Math.round(255*amt));
+  const b=Math.min(255,(n&0xff)+Math.round(255*amt));
+  return `rgb(${r},${g},${b})`;
+}
+
+// Ease-out quintic
+function easeOut(t){ return 1-Math.pow(1-t,5); }
+
+// rAF loop
+function wheelRAFLoop(ts){
+  if(!isSpinning){ drawWheel(); return; }
+  if(!spinStartTS) spinStartTS=ts;
+  const elapsed=ts-spinStartTS;
+  const progress=Math.min(elapsed/SPIN_DUR,1);
+  wheelAngle=spinFrom+(spinTo-spinFrom)*easeOut(progress);
+  drawWheel();
+  if(progress<1){ spinRAF=requestAnimationFrame(wheelRAFLoop); }
+  else{ isSpinning=false; onSpinAnimComplete(); }
+}
+function startWheelLoop(){ spinRAF=requestAnimationFrame(wheelRAFLoop); }
+
+// Compute target angle to land winner at pointer (top)
+function computeSpinTarget(winnerUserId){
+  let accumulated=0;
+  let winnerCenter=0;
+  for(const s of wheelSlices){
+    const sa=s.pct*Math.PI*2;
+    if(s.user_id===winnerUserId){ winnerCenter=accumulated+sa/2; break; }
+    accumulated+=sa;
+  }
+  // wheelAngle so that winner center lands at -PI/2 (top/pointer):
+  // winnerCenter + wheelAngle - PI/2 = -PI/2  =>  wheelAngle = -winnerCenter
+  const offset=((-winnerCenter)%(2*Math.PI)+2*Math.PI)%(2*Math.PI);
+  return 8*2*Math.PI+offset; // 8 full spins + final position
+}
+
+let pendingWinner=null;
+function onSpinAnimComplete(){
+  tg?.HapticFeedback?.notificationOccurred("success");
+  if(pendingWinner){
+    spawnConfetti(cc.width/2,cc.height/2,220,true);
+    setTimeout(()=>spawnConfetti(cc.width/2,cc.height/2,150,true),350);
+    setTimeout(()=>{
+      showCrownOverlay(pendingWinner.name, pendingWinner.amount, "crown_winner_title");
+      showWinnerCard(pendingWinner);
+    },600);
+  }
+}
+
+// Show winner card permanently
+function showWinnerCard(winner){
+  const wc=document.getElementById("winnerCard");
+  document.getElementById("winnerName").textContent=winner.name;
+  document.getElementById("winnerAmount").innerHTML=`<strong>${winner.amount.toLocaleString()} RSD</strong> — ${t("pledged")}`;
+  wc.classList.add("show");
+  document.getElementById("winnerCard").scrollIntoView({behavior:"smooth",block:"center"});
+}
+
+// Wheel status text
+let deadlinePassed=false;
+function renderWheelStatus(){
+  const el=document.getElementById("wheelDateTxt");
+  if(deadlinePassed){
+    el.innerHTML=`<strong data-i="spin_btn" style="font-size:1.1rem">${t("wheel_bigger_pledge")}</strong>`;
+    // spin button is rendered separately
+  } else {
+    const d=DEADLINE;
+    const dateStr=lang==="ru"?"29 августа 2026":"August 29, 2026";
+    el.innerHTML=`${t("wheel_spins_on")} <strong>${dateStr}</strong><br><span style="font-size:.8rem;color:rgba(255,255,255,.35)">${t("wheel_bigger_pledge")}</span>`;
+  }
+}
+
+function renderWheelLegend(){
+  const el=document.getElementById("wheelLegend");
+  el.innerHTML="";
+  wheelSlices.forEach((s,i)=>{
+    const div=document.createElement("div"); div.className="legend-item";
+    div.innerHTML=`<div class="legend-dot" style="background:${WHEEL_COLORS[i%WHEEL_COLORS.length]}"></div><span class="legend-name">${esc(s.name)}</span><span class="legend-pct">${(s.pct*100).toFixed(1)}%</span>`;
+    el.appendChild(div);
+  });
+}
+
+// Load wheel data
+async function loadWheelData(){
+  try{
+    const data=await(await fetch("/api/wheel")).json();
+    wheelSlices=data.slices||[];
+    drawWheel();
+    renderWheelLegend();
+  } catch{}
+}
+
+// Load winner (on init)
+async function loadWinner(){
+  try{
+    const d=await(await fetch("/api/winner")).json();
+    if(d.winner){
+      pendingWinner=d.winner;
+      // Snap wheel to winning position without animation
+      if(wheelSlices.length) wheelAngle=computeSpinTarget(d.winner.user_id)%(2*Math.PI);
+      drawWheel();
+      showWinnerCard(d.winner);
+    }
+  } catch{}
+}
+
+// Init wheel tab (called when user switches to it)
+let wheelTabInited=false;
+async function initWheelTab(){
+  if(!wheelTabInited){
+    wheelTabInited=true;
+    resizeWheel();
+    await loadWheelData();
+    await loadWinner();
+    renderWheelStatus();
+    // Check if deadline passed and render spin button
+    const now=new Date();
+    deadlinePassed=now>=DEADLINE;
+    if(deadlinePassed) renderSpinButton();
+  }
+}
+
+function renderSpinButton(){
+  const ws=document.getElementById("wheelStatus");
+  if(document.getElementById("winnerCard").classList.contains("show")) return;
+  ws.innerHTML=`<button class="spin-btn" id="spinBtn" onclick="doSpin()" data-i="spin_btn">${t("spin_btn")}</button>`;
+}
+
+// Trigger spin
+async function doSpin(){
+  const btn=document.getElementById("spinBtn");
+  if(btn){btn.disabled=true;btn.textContent=t("spinning");}
+  try{
+    const res=await fetch("/api/spin",{method:"POST",headers:{"Content-Type":"application/json"},body:"{}"});
+    const data=await res.json();
+    if(!data.ok){ toast(data.error||"Error"); if(btn){btn.disabled=false;btn.textContent=t("spin_btn");} return; }
+    pendingWinner=data.winner;
+    if(data.just_spun){
+      // Animate!
+      const target=computeSpinTarget(data.winner.user_id);
+      spinFrom=wheelAngle; spinTo=target; spinStartTS=null; isSpinning=true;
+      startWheelLoop();
+      if(btn) btn.remove();
+    } else {
+      // Already spun
+      wheelAngle=computeSpinTarget(data.winner.user_id)%(2*Math.PI);
+      drawWheel();
+      showWinnerCard(data.winner);
+      if(btn) btn.remove();
+    }
+  } catch{ toast(t("net_err")); if(btn){btn.disabled=false;btn.textContent=t("spin_btn");} }
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────
 setLang(lang);
 loadStatus(); loadMyPledge(); loadLeaderboard();
 setInterval(loadStatus, 10000);
+startWheelLoop(); // keep wheel rAF running
 </script>
 </body>
 </html>
