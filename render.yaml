@@ -3,7 +3,7 @@ services:
     name: boldilia-bot
     runtime: python
     pythonVersion: "3.12.0"
-    buildCommand: pip install -r requirements.txt
+    buildCommand: pip install --no-cache-dir -r requirements.txt
     startCommand: python3 bot.py
     envVars:
       - key: BOT_TOKEN
