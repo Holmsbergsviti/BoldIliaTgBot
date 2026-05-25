@@ -1,31 +1,35 @@
 import asyncio
+import hashlib
+import hmac
+import json
 import logging
 import os
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
+from pathlib import Path
+from urllib.parse import unquote
 
+from aiohttp import web
 from dotenv import load_dotenv
 from telegram import (
     Update,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
+    WebAppInfo,
+    MenuButtonWebApp,
 )
 from telegram.constants import ParseMode
-from telegram.ext import (
-    Application,
-    CommandHandler,
-    CallbackQueryHandler,
-    ContextTypes,
-    ConversationHandler,
-    MessageHandler,
-    filters,
-)
+from telegram.ext import Application, CommandHandler, ContextTypes
 
 import database as db
 
 load_dotenv()
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-WEBHOOK_URL = os.getenv("WEBHOOK_URL")  # e.g. https://boldilia-bot.onrender.com
+BOT_TOKEN = os.getenv("BOT_TOKEN", "")
+WEBHOOK_URL = os.getenv("WEBHOOK_URL", "")
 PORT = int(os.getenv("PORT", 8080))
+
+GOAL = 30_000
+DEADLINE = datetime(2026, 8, 29, tzinfo=timezone.utc)
+STATIC_DIR = Path(__file__).parent / "static"
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -33,486 +37,192 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# ── Constants ────────────────────────────────────────────────────────────────
 
-GOAL = 30_000          # Serbian dinars
-DEADLINE = datetime(2026, 8, 29, tzinfo=timezone.utc)
+# ── Telegram initData validation ──────────────────────────────────────────────
 
-PRESET_AMOUNTS = [200, 500, 1_000, 2_000, 5_000, 10_000]
-
-# ConversationHandler state
-WAITING_CUSTOM = 1
-
-# ── Formatting helpers ───────────────────────────────────────────────────────
-
-def fmt(n: int) -> str:
-    """Format number with Serbian thousands separator (.)."""
-    return f"{n:,}".replace(",", ".")
-
-
-def progress_bar(total: int, goal: int = GOAL, width: int = 20) -> str:
-    pct = min(total / goal, 1.0)
-    filled = round(pct * width)
-    bar = "█" * filled + "░" * (width - filled)
-    over_goal = total > goal
-    emoji = "🔥" if over_goal else "📊"
-    return f"{emoji} [{bar}] {pct*100:.1f}%"
-
-
-def countdown_text() -> str:
-    now = datetime.now(timezone.utc)
-    delta = DEADLINE - now
-    if delta.total_seconds() <= 0:
-        return "⌛ Rok je istekao!"
-    days = delta.days
-    hours, rem = divmod(delta.seconds, 3600)
-    minutes = rem // 60
-    return f"⏳ Do 29. avgusta: *{days}* dana, *{hours}h {minutes}min*"
-
-
-def status_text(total: int, donors: int) -> str:
-    over = total >= GOAL
-    header = (
-        "🪒✨ *MISIJA: ĆELAVOST* ✨🪒\n\n"
-        "Skupljamo pare da Ilija obrije glavu! 😈\n"
-    )
-    bar = progress_bar(total)
-    amounts = (
-        f"\n💰 Skupljeno: *{fmt(total)} RSD*\n"
-        f"🎯 Cilj:      *{fmt(GOAL)} RSD*\n"
-        f"👥 Donatori:  *{donors}*\n"
-    )
-    extra = ""
-    if over:
-        surplus = total - GOAL
-        extra = (
-            f"\n🔥🔥🔥 *CILJ DOSTIGNUT!* 🔥🔥🔥\n"
-            f"Čak *{fmt(surplus)} RSD* iznad cilja!\n"
-            "Ilija, mašina čeka! 💈\n"
-        )
-    countdown = "\n" + countdown_text()
-    return header + bar + amounts + extra + countdown
-
-
-# ── /start ───────────────────────────────────────────────────────────────────
-
-INTRO_FRAMES = [
-    "💈",
-    "💈 *Učitavanje operacije...*",
-    "💈 *Učitavanje operacije...*\n✂️",
-    "💈 *Učitavanje operacije...*\n✂️ _Oštrenje mašinice..._",
-    (
-        "╔══════════════════════╗\n"
-        "║  🪒  ĆELAVI ILIJA  🪒  ║\n"
-        "╚══════════════════════╝\n\n"
-        "Pozdrav! 👋\n\n"
-        "Skupljamo *{goal} RSD* da Ilija obrije glavu do gole kože! 🧑‍🦲\n\n"
-        "Ako cilj bude dostignut do *29. avgusta*, mašinica kreće! 💈\n\n"
-        "Odaberi koliko si spreman/na da daš, i pomozi misiji! 😈"
-    ),
-]
-
-
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    msg = await update.message.reply_text("💈", parse_mode=ParseMode.MARKDOWN)
-    for i, frame in enumerate(INTRO_FRAMES[1:], 1):
-        await asyncio.sleep(0.7)
-        text = frame.format(goal=fmt(GOAL)) if "{goal}" in frame else frame
-        await msg.edit_text(text, parse_mode=ParseMode.MARKDOWN)
-
-    keyboard = [
-        [InlineKeyboardButton("💸 Daj pare!", callback_data="pledge")],
-        [InlineKeyboardButton("📊 Status kampanje", callback_data="status")],
-        [InlineKeyboardButton("🏆 Rang lista", callback_data="leaderboard")],
-    ]
-    await asyncio.sleep(1.0)
-    await update.message.reply_text(
-        "Šta želiš da uradiš?",
-        reply_markup=InlineKeyboardMarkup(keyboard),
-    )
-
-
-# ── /pledge & pledge flow ────────────────────────────────────────────────────
-
-def pledge_keyboard(current: int | None = None) -> InlineKeyboardMarkup:
-    rows = []
-    row = []
-    for i, amt in enumerate(PRESET_AMOUNTS):
-        marker = " ✅" if amt == current else ""
-        row.append(InlineKeyboardButton(f"{fmt(amt)} RSD{marker}", callback_data=f"amt_{amt}"))
-        if len(row) == 2:
-            rows.append(row)
-            row = []
-    if row:
-        rows.append(row)
-    rows.append([InlineKeyboardButton("✏️ Unesi drugi iznos", callback_data="amt_custom")])
-    if current:
-        rows.append([InlineKeyboardButton("❌ Poništi moje učešće", callback_data="remove_pledge")])
-    rows.append([InlineKeyboardButton("🔙 Nazad", callback_data="main_menu")])
-    return InlineKeyboardMarkup(rows)
-
-
-async def pledge_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user = update.effective_user
-    current = await db.get_pledge(user.id)
-    intro = (
-        "💸 *Odaberi iznos koji si spreman/na da doniraš:*\n\n"
-        "_Ovo je tvoje obećanje — pare se skupljaju kad Ilija obrije glavu!_\n"
-    )
-    if current:
-        intro += f"\n🔄 Tvoja trenutna uplata: *{fmt(current)} RSD*\n"
-    await update.message.reply_text(
-        intro,
-        parse_mode=ParseMode.MARKDOWN,
-        reply_markup=pledge_keyboard(current),
-    )
-
-
-async def pledge_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    user = query.from_user
-
-    if query.data == "main_menu":
-        keyboard = [
-            [InlineKeyboardButton("💸 Daj pare!", callback_data="pledge")],
-            [InlineKeyboardButton("📊 Status kampanje", callback_data="status")],
-            [InlineKeyboardButton("🏆 Rang lista", callback_data="leaderboard")],
-        ]
-        await query.edit_message_text(
-            "Šta želiš da uradiš?",
-            reply_markup=InlineKeyboardMarkup(keyboard),
-        )
-        return ConversationHandler.END
-
-    if query.data == "pledge":
-        current = await db.get_pledge(user.id)
-        intro = (
-            "💸 *Odaberi iznos koji si spreman/na da doniraš:*\n\n"
-            "_Ovo je tvoje obećanje — pare se skupljaju kad Ilija obrije glavu!_\n"
-        )
-        if current:
-            intro += f"\n🔄 Tvoja trenutna uplata: *{fmt(current)} RSD*\n"
-        await query.edit_message_text(
-            intro,
-            parse_mode=ParseMode.MARKDOWN,
-            reply_markup=pledge_keyboard(current),
-        )
-        return
-
-    if query.data == "remove_pledge":
-        await db.remove_pledge(user.id)
-        await query.edit_message_text(
-            "❌ Tvoje učešće je poništeno.\n\nMožeš se uvek prijaviti ponovo! 💸",
-            parse_mode=ParseMode.MARKDOWN,
-            reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("🔙 Glavni meni", callback_data="main_menu")]
-            ]),
-        )
-        return ConversationHandler.END
-
-    if query.data == "status":
-        total = await db.get_total()
-        donors = await db.get_donor_count()
-        await query.edit_message_text(
-            status_text(total, donors),
-            parse_mode=ParseMode.MARKDOWN,
-            reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("💸 Daj pare!", callback_data="pledge")],
-                [InlineKeyboardButton("🏆 Rang lista", callback_data="leaderboard")],
-                [InlineKeyboardButton("🔙 Nazad", callback_data="main_menu")],
-            ]),
-        )
-        return
-
-    if query.data == "leaderboard":
-        rows = await db.get_leaderboard()
-        total = await db.get_total()
-        medals = ["🥇", "🥈", "🥉"] + ["🏅"] * 7
-        lines = ["🏆 *TOP DONATORI* 🏆\n"]
-        for i, (fname, uname, amt) in enumerate(rows):
-            display = f"@{uname}" if uname else fname
-            lines.append(f"{medals[i]} {display} — *{fmt(amt)} RSD*")
-        lines.append(f"\n💰 Ukupno skupljeno: *{fmt(total)} RSD* / {fmt(GOAL)} RSD")
-        await query.edit_message_text(
-            "\n".join(lines),
-            parse_mode=ParseMode.MARKDOWN,
-            reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("💸 Daj pare!", callback_data="pledge")],
-                [InlineKeyboardButton("🔙 Nazad", callback_data="main_menu")],
-            ]),
-        )
-        return
-
-    if query.data.startswith("amt_"):
-        val = query.data[4:]
-        if val == "custom":
-            await query.edit_message_text(
-                "✏️ Unesi iznos u dinarima (samo broj, npr. *3000*):",
-                parse_mode=ParseMode.MARKDOWN,
-            )
-            return WAITING_CUSTOM
-        amount = int(val)
-        await _confirm_pledge(query, user, amount)
-        return ConversationHandler.END
-
-
-async def _confirm_pledge(query, user, amount: int):
-    name = user.first_name
-    await db.upsert_pledge(user.id, user.username, user.first_name, amount)
-    total = await db.get_total()
-    donors = await db.get_donor_count()
-    over = total >= GOAL
-    congrats = ""
-    if over:
-        congrats = "\n\n🔥🔥🔥 *CILJ JE DOSTIGNUT!* Ilija, mašinica te čeka! 🔥🔥🔥"
-    bar = progress_bar(total)
-    text = (
-        f"✅ *Hvala, {name}!*\n\n"
-        f"Tvoja uplata: *{fmt(amount)} RSD* 💸\n\n"
-        f"{bar}\n"
-        f"Skupljeno: *{fmt(total)} RSD* / *{fmt(GOAL)} RSD*\n"
-        f"Donatori: *{donors}*"
-        f"{congrats}"
-    )
-    await query.edit_message_text(
-        text,
-        parse_mode=ParseMode.MARKDOWN,
-        reply_markup=InlineKeyboardMarkup([
-            [InlineKeyboardButton("📊 Status kampanje", callback_data="status")],
-            [InlineKeyboardButton("🏆 Rang lista", callback_data="leaderboard")],
-            [InlineKeyboardButton("🔙 Glavni meni", callback_data="main_menu")],
-        ]),
-    )
-
-
-async def custom_amount_received(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = update.message.text.strip().replace(".", "").replace(",", "").replace(" ", "")
+def validate_init_data(init_data: str) -> dict | None:
     try:
-        amount = int(text)
-    except ValueError:
-        await update.message.reply_text(
-            "❌ Neispravan unos. Molim unesi samo broj (npr. *3000*).",
-            parse_mode=ParseMode.MARKDOWN,
-        )
-        return WAITING_CUSTOM
+        parsed: dict[str, str] = {}
+        for item in unquote(init_data).split("&"):
+            if "=" in item:
+                k, v = item.split("=", 1)
+                parsed[k] = v
+        hash_value = parsed.pop("hash", None)
+        if not hash_value:
+            return None
+        data_check = "\n".join(f"{k}={v}" for k, v in sorted(parsed.items()))
+        secret = hmac.new(b"WebAppData", BOT_TOKEN.encode(), hashlib.sha256).digest()
+        expected = hmac.new(secret, data_check.encode(), hashlib.sha256).hexdigest()
+        if not hmac.compare_digest(hash_value, expected):
+            return None
+        user_str = parsed.get("user")
+        return json.loads(user_str) if user_str else None
+    except Exception:
+        return None
 
-    if amount < 50:
-        await update.message.reply_text(
-            "❌ Minimalni iznos je *50 RSD*. Pokušaj ponovo.",
-            parse_mode=ParseMode.MARKDOWN,
-        )
-        return WAITING_CUSTOM
 
-    user = update.effective_user
-    await db.upsert_pledge(user.id, user.username, user.first_name, amount)
+# ── REST API handlers ─────────────────────────────────────────────────────────
+
+async def api_status(request: web.Request) -> web.Response:
     total = await db.get_total()
     donors = await db.get_donor_count()
-    over = total >= GOAL
-    congrats = ""
-    if over:
-        congrats = "\n\n🔥🔥🔥 *CILJ JE DOSTIGNUT!* Ilija, mašinica te čeka! 🔥🔥🔥"
-    bar = progress_bar(total)
-    await update.message.reply_text(
-        f"✅ *Hvala, {user.first_name}!*\n\n"
-        f"Tvoja uplata: *{fmt(amount)} RSD* 💸\n\n"
-        f"{bar}\n"
-        f"Skupljeno: *{fmt(total)} RSD* / *{fmt(GOAL)} RSD*\n"
-        f"Donatori: *{donors}*"
-        f"{congrats}",
-        parse_mode=ParseMode.MARKDOWN,
-        reply_markup=InlineKeyboardMarkup([
-            [InlineKeyboardButton("📊 Status kampanje", callback_data="status")],
-            [InlineKeyboardButton("🏆 Rang lista", callback_data="leaderboard")],
-            [InlineKeyboardButton("🔙 Glavni meni", callback_data="main_menu")],
-        ]),
-    )
-    return ConversationHandler.END
-
-
-# ── /status ──────────────────────────────────────────────────────────────────
-
-async def status_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    msg = await update.message.reply_text("📡 _Učitavam podatke..._", parse_mode=ParseMode.MARKDOWN)
-    await asyncio.sleep(0.8)
-
-    total = await db.get_total()
-    donors = await db.get_donor_count()
-
-    # Animated progress reveal
-    pct = min(total / GOAL, 1.0)
-    steps = 8
-    for step in range(1, steps + 1):
-        partial_total = int(total * (step / steps))
-        bar = progress_bar(partial_total)
-        await msg.edit_text(
-            f"📡 *Učitavam...*\n\n{bar}\n_{fmt(partial_total)} RSD_",
-            parse_mode=ParseMode.MARKDOWN,
-        )
-        await asyncio.sleep(0.15)
-
-    await msg.edit_text(
-        status_text(total, donors),
-        parse_mode=ParseMode.MARKDOWN,
-        reply_markup=InlineKeyboardMarkup([
-            [InlineKeyboardButton("💸 Daj pare!", callback_data="pledge")],
-            [InlineKeyboardButton("🏆 Rang lista", callback_data="leaderboard")],
-        ]),
-    )
-
-
-# ── /leaderboard ─────────────────────────────────────────────────────────────
-
-async def leaderboard_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    msg = await update.message.reply_text("🏆 _Učitavam rang listu..._", parse_mode=ParseMode.MARKDOWN)
-    await asyncio.sleep(0.6)
-
-    rows = await db.get_leaderboard()
-    total = await db.get_total()
-
-    if not rows:
-        await msg.edit_text(
-            "😔 Još nema donatora. Budi prvi! /pledge",
-            parse_mode=ParseMode.MARKDOWN,
-        )
-        return
-
-    medals = ["🥇", "🥈", "🥉"] + ["🏅"] * 7
-    lines = ["🏆 *TOP DONATORI* 🏆\n"]
-
-    # Reveal donors one by one
-    for i, (fname, uname, amt) in enumerate(rows):
-        display = f"@{uname}" if uname else fname
-        lines.append(f"{medals[i]} {display} — *{fmt(amt)} RSD*")
-        await msg.edit_text(
-            "\n".join(lines) + "\n\n_..._",
-            parse_mode=ParseMode.MARKDOWN,
-        )
-        await asyncio.sleep(0.3)
-
-    lines.append(f"\n💰 Ukupno skupljeno: *{fmt(total)} RSD* / {fmt(GOAL)} RSD")
-    lines.append(countdown_text())
-    await msg.edit_text(
-        "\n".join(lines),
-        parse_mode=ParseMode.MARKDOWN,
-        reply_markup=InlineKeyboardMarkup([
-            [InlineKeyboardButton("💸 Daj pare!", callback_data="pledge")],
-            [InlineKeyboardButton("📊 Status kampanje", callback_data="status")],
-        ]),
-    )
-
-
-# ── /countdown ───────────────────────────────────────────────────────────────
-
-async def countdown_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     now = datetime.now(timezone.utc)
-    delta = DEADLINE - now
-    days = max(delta.days, 0)
+    secs = max(int((DEADLINE - now).total_seconds()), 0)
+    days, rem = divmod(secs, 86400)
+    hours, rem = divmod(rem, 3600)
+    minutes, seconds = divmod(rem, 60)
+    return web.json_response({
+        "total": total,
+        "goal": GOAL,
+        "donors": donors,
+        "pct": round(min(total / GOAL * 100, 9999), 1),
+        "goal_reached": total >= GOAL,
+        "countdown": {"days": days, "hours": hours, "minutes": minutes, "seconds": seconds},
+    })
 
-    # Hair emoji string that shrinks with fewer days remaining
-    total_days = (DEADLINE - datetime(2026, 5, 25, tzinfo=timezone.utc)).days
-    hair_count = max(1, round(20 * (days / total_days))) if total_days > 0 else 1
-    hair = "👱" * hair_count
 
-    msg = await update.message.reply_text(
-        f"💈 _Brije se..._\n\n{hair}",
-        parse_mode=ParseMode.MARKDOWN,
-    )
-    await asyncio.sleep(1.0)
+async def api_leaderboard(request: web.Request) -> web.Response:
+    rows = await db.get_leaderboard()
+    return web.json_response([
+        {"name": r[0], "username": r[1], "amount": r[2]} for r in rows
+    ])
 
-    frames = []
-    for i in range(hair_count, -1, -max(1, hair_count // 6)):
-        frames.append("👱" * max(i, 0))
-    frames.append("🧑‍🦲")
 
-    for frame in frames:
-        await asyncio.sleep(0.5)
-        await msg.edit_text(
-            f"💈 _Brije se..._\n\n{frame or '🧑‍🦲'}",
-            parse_mode=ParseMode.MARKDOWN,
-        )
+async def api_my_pledge(request: web.Request) -> web.Response:
+    init_data = request.query.get("initData", "")
+    user = validate_init_data(init_data)
+    amount = await db.get_pledge(user["id"]) if user else None
+    return web.json_response({"amount": amount})
 
-    await asyncio.sleep(0.5)
-    await msg.edit_text(
-        f"💈 *ODBROJAVANJE DO ĆELAVOSTI* 💈\n\n"
-        f"🧑‍🦲 Ilija ostaje bez kose za...\n\n"
-        f"*{days}* dana\n\n"
-        f"{countdown_text()}\n\n"
-        f"📅 Datum: *29. avgust 2026.*",
+
+async def api_pledge(request: web.Request) -> web.Response:
+    try:
+        body = await request.json()
+    except Exception:
+        return web.json_response({"error": "Invalid JSON"}, status=400)
+    user = validate_init_data(body.get("initData", ""))
+    if not user:
+        return web.json_response({"error": "Unauthorized"}, status=401)
+    amount = body.get("amount")
+    if not isinstance(amount, int) or amount < 50:
+        return web.json_response({"error": "Minimum amount is 50 RSD"}, status=400)
+    await db.upsert_pledge(user["id"], user.get("username"), user.get("first_name", ""), amount)
+    total = await db.get_total()
+    donors = await db.get_donor_count()
+    return web.json_response({
+        "ok": True, "total": total, "donors": donors, "goal_reached": total >= GOAL,
+    })
+
+
+async def api_remove_pledge(request: web.Request) -> web.Response:
+    try:
+        body = await request.json()
+    except Exception:
+        return web.json_response({"error": "Invalid JSON"}, status=400)
+    user = validate_init_data(body.get("initData", ""))
+    if not user:
+        return web.json_response({"error": "Unauthorized"}, status=401)
+    await db.remove_pledge(user["id"])
+    return web.json_response({"ok": True})
+
+
+async def serve_index(request: web.Request) -> web.Response:
+    return web.FileResponse(STATIC_DIR / "index.html")
+
+
+# ── Telegram webhook ──────────────────────────────────────────────────────────
+
+async def webhook_handler(request: web.Request) -> web.Response:
+    ptb_app: Application = request.app["ptb_app"]
+    try:
+        data = await request.json()
+        update = Update.de_json(data, ptb_app.bot)
+        await ptb_app.process_update(update)
+    except Exception as e:
+        logger.error(f"Webhook error: {e}")
+    return web.Response(text="ok")
+
+
+# ── Bot commands ──────────────────────────────────────────────────────────────
+
+async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    url = WEBHOOK_URL or "https://example.com"
+    await update.message.reply_text(
+        "💈 *Bald Ilia Campaign*\n\n"
+        "We're raising *30,000 RSD* to shave Ilia's head! 🧑‍🦲\n\n"
+        "Open the app below to pledge and track progress:",
         parse_mode=ParseMode.MARKDOWN,
         reply_markup=InlineKeyboardMarkup([
-            [InlineKeyboardButton("💸 Daj pare!", callback_data="pledge")],
-            [InlineKeyboardButton("📊 Status kampanje", callback_data="status")],
+            [InlineKeyboardButton("🪒 Open App", web_app=WebAppInfo(url=url))]
         ]),
     )
 
 
-# ── /help ────────────────────────────────────────────────────────────────────
-
-async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    url = WEBHOOK_URL or "https://example.com"
     await update.message.reply_text(
-        "🪒 *ĆELAVI ILIJA — POMOĆ* 🪒\n\n"
-        "/start — Početni ekran\n"
-        "/pledge — Prijavi se kao donator\n"
-        "/status — Pogledaj napredak kampanje\n"
-        "/leaderboard — Rang lista donatora\n"
-        "/countdown — Odbrojavanje do 29. avgusta\n"
-        "/help — Ova poruka\n\n"
-        f"🎯 Cilj: *{fmt(GOAL)} RSD*\n"
-        "Ako skupimo dovoljno — Ilija brije glavu! 💈",
+        "🪒 *Bald Ilia — Help*\n\n"
+        "🎯 Goal: *30,000 RSD*\n"
+        "📅 Deadline: *August 29, 2026*\n\n"
+        "If we collect enough — Ilia shaves his head! 💈",
         parse_mode=ParseMode.MARKDOWN,
+        reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("🪒 Open App", web_app=WebAppInfo(url=url))]
+        ]),
     )
 
 
-# ── Main ─────────────────────────────────────────────────────────────────────
+# ── Entry point ───────────────────────────────────────────────────────────────
 
-async def post_init(app: Application):
+async def run():
+    if not BOT_TOKEN:
+        raise RuntimeError("BOT_TOKEN is not set.")
+
     await db.init_db()
     logger.info("Database initialized.")
 
+    ptb_app = Application.builder().token(BOT_TOKEN).build()
+    ptb_app.add_handler(CommandHandler("start", cmd_start))
+    ptb_app.add_handler(CommandHandler("help", cmd_help))
 
-def main():
-    if not BOT_TOKEN:
-        raise RuntimeError("BOT_TOKEN is not set. Copy .env.example to .env and add your token.")
+    aio_app = web.Application()
+    aio_app["ptb_app"] = ptb_app
+    aio_app.router.add_post("/webhook", webhook_handler)
+    aio_app.router.add_get("/api/status", api_status)
+    aio_app.router.add_get("/api/leaderboard", api_leaderboard)
+    aio_app.router.add_get("/api/my-pledge", api_my_pledge)
+    aio_app.router.add_post("/api/pledge", api_pledge)
+    aio_app.router.add_post("/api/remove-pledge", api_remove_pledge)
+    aio_app.router.add_get("/", serve_index)
 
-    app = (
-        Application.builder()
-        .token(BOT_TOKEN)
-        .post_init(post_init)
-        .build()
-    )
+    async with ptb_app:
+        await ptb_app.initialize()
+        await ptb_app.start()
 
-    pledge_conv = ConversationHandler(
-        entry_points=[
-            CommandHandler("pledge", pledge_command),
-            CallbackQueryHandler(pledge_button, pattern="^(pledge|amt_.+|remove_pledge|main_menu|status|leaderboard)$"),
-        ],
-        states={
-            WAITING_CUSTOM: [MessageHandler(filters.TEXT & ~filters.COMMAND, custom_amount_received)],
-        },
-        fallbacks=[CommandHandler("cancel", lambda u, c: ConversationHandler.END)],
-        per_message=False,
-    )
+        if WEBHOOK_URL:
+            await ptb_app.bot.set_webhook(f"{WEBHOOK_URL}/webhook")
+            try:
+                await ptb_app.bot.set_chat_menu_button(
+                    menu_button=MenuButtonWebApp(
+                        text="Open App",
+                        web_app=WebAppInfo(url=WEBHOOK_URL),
+                    )
+                )
+                logger.info("Menu button set.")
+            except Exception as e:
+                logger.warning(f"Could not set menu button: {e}")
 
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("status", status_command))
-    app.add_handler(CommandHandler("leaderboard", leaderboard_command))
-    app.add_handler(CommandHandler("countdown", countdown_command))
-    app.add_handler(CommandHandler("help", help_command))
-    app.add_handler(pledge_conv)
+        runner = web.AppRunner(aio_app)
+        await runner.setup()
+        await web.TCPSite(runner, "0.0.0.0", PORT).start()
+        logger.info(f"Server running on port {PORT}.")
 
-    if WEBHOOK_URL:
-        logger.info(f"Bot started in webhook mode on port {PORT}.")
-        app.run_webhook(
-            listen="0.0.0.0",
-            port=PORT,
-            url_path="/webhook",
-            webhook_url=f"{WEBHOOK_URL}/webhook",
-        )
-    else:
-        logger.info("Bot started in polling mode.")
-        app.run_polling(drop_pending_updates=True)
+        try:
+            await asyncio.Event().wait()
+        finally:
+            await runner.cleanup()
+            await ptb_app.stop()
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(run())

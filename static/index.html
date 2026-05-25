@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Bald Ilia 💈</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  :root {
+    --bg:     var(--tg-theme-bg-color, #1a1a2e);
+    --sec:    var(--tg-theme-secondary-bg-color, #16213e);
+    --text:   var(--tg-theme-text-color, #eee);
+    --hint:   var(--tg-theme-hint-color, #aaa);
+    --btn:    var(--tg-theme-button-color, #e94560);
+    --btnTxt: var(--tg-theme-button-text-color, #fff);
+    --link:   var(--tg-theme-link-color, #e94560);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg); color: var(--text);
+    min-height: 100vh; padding: 16px;
+  }
+  h1 { font-size: 1.6rem; text-align: center; margin-bottom: 4px; }
+  .sub { text-align: center; color: var(--hint); font-size: .85rem; margin-bottom: 20px; }
+
+  /* Progress */
+  .card { background: var(--sec); border-radius: 16px; padding: 16px; margin-bottom: 14px; }
+  .prog-label { display: flex; justify-content: space-between; font-size: .85rem; color: var(--hint); margin-bottom: 8px; }
+  .prog-wrap { background: rgba(255,255,255,.1); border-radius: 999px; height: 18px; overflow: hidden; }
+  .prog-bar {
+    height: 100%; border-radius: 999px;
+    background: linear-gradient(90deg, #e94560, #f5a623);
+    width: 0%; transition: width 1s cubic-bezier(.4,0,.2,1);
+    position: relative;
+  }
+  .prog-bar.glow { box-shadow: 0 0 14px #e94560cc; }
+  .prog-total { text-align: center; font-size: 1.8rem; font-weight: 700; margin: 10px 0 2px; }
+  .prog-goal  { text-align: center; color: var(--hint); font-size: .8rem; }
+  .goal-badge {
+    text-align: center; margin-top: 10px; font-size: 1.1rem; font-weight: 600;
+    color: #f5a623; display: none;
+  }
+
+  /* Countdown */
+  .countdown { display: flex; justify-content: center; gap: 12px; }
+  .cd-unit { text-align: center; }
+  .cd-val {
+    background: var(--btn); color: var(--btnTxt);
+    border-radius: 10px; padding: 8px 14px;
+    font-size: 1.5rem; font-weight: 700; min-width: 56px; display: block;
+    transition: transform .15s;
+  }
+  .cd-val.bump { animation: bump .25s ease; }
+  @keyframes bump { 0%{transform:scale(1)} 50%{transform:scale(1.2)} 100%{transform:scale(1)} }
+  .cd-lbl { font-size: .65rem; color: var(--hint); margin-top: 4px; }
+
+  /* Pledge */
+  .amounts { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 12px; }
+  .amt-btn {
+    background: var(--bg); border: 2px solid rgba(255,255,255,.15);
+    border-radius: 12px; color: var(--text);
+    padding: 10px 4px; font-size: .9rem; cursor: pointer;
+    transition: border-color .2s, background .2s;
+  }
+  .amt-btn:hover, .amt-btn.sel {
+    border-color: var(--btn); background: color-mix(in srgb, var(--btn) 20%, transparent);
+  }
+  .custom-wrap { display: flex; gap: 8px; margin-bottom: 12px; }
+  .custom-wrap input {
+    flex: 1; background: var(--bg); border: 2px solid rgba(255,255,255,.15);
+    border-radius: 12px; color: var(--text); padding: 10px 14px; font-size: .9rem;
+    outline: none;
+  }
+  .custom-wrap input:focus { border-color: var(--btn); }
+  .pledge-btn {
+    width: 100%; background: var(--btn); color: var(--btnTxt);
+    border: none; border-radius: 12px; padding: 14px;
+    font-size: 1rem; font-weight: 600; cursor: pointer;
+    transition: opacity .2s, transform .1s;
+  }
+  .pledge-btn:active { transform: scale(.98); }
+  .pledge-btn:disabled { opacity: .5; cursor: default; }
+  .my-pledge {
+    text-align: center; margin-top: 12px; font-size: .85rem; color: var(--hint);
+  }
+  .remove-link {
+    color: var(--link); cursor: pointer; text-decoration: underline; margin-left: 6px;
+  }
+
+  /* Leaderboard */
+  .lb-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,.06);
+    animation: fadeIn .4s ease;
+  }
+  .lb-row:last-child { border-bottom: none; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
+  .lb-rank { font-size: .9rem; font-weight: 700; min-width: 22px; color: var(--hint); }
+  .lb-name { flex: 1; font-size: .9rem; }
+  .lb-amt  { font-size: .9rem; font-weight: 600; color: var(--link); }
+
+  /* Toast */
+  #toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+    background: #222; color: #fff; padding: 10px 20px; border-radius: 20px;
+    font-size: .9rem; transition: transform .3s; z-index: 999; pointer-events: none;
+    white-space: nowrap;
+  }
+  #toast.show { transform: translateX(-50%) translateY(0); }
+
+  section h2 { font-size: 1rem; font-weight: 600; margin-bottom: 12px; color: var(--hint); text-transform: uppercase; letter-spacing: .06em; }
+  .donors-line { text-align: center; font-size: .8rem; color: var(--hint); margin-top: 6px; }
+</style>
+</head>
+<body>
+<h1>💈 Bald Ilia</h1>
+<p class="sub">Help us shave Ilia's head by August 29, 2026!</p>
+
+<!-- Progress -->
+<div class="card">
+  <div class="prog-label">
+    <span>Progress</span>
+    <span id="pct">0%</span>
+  </div>
+  <div class="prog-wrap"><div class="prog-bar" id="progBar"></div></div>
+  <div class="prog-total" id="totalAmt">0 RSD</div>
+  <div class="prog-goal">Goal: 30,000 RSD</div>
+  <div class="goal-badge" id="goalBadge">🎉 Goal reached! Ilia is going bald!</div>
+  <p class="donors-line" id="donorLine"></p>
+</div>
+
+<!-- Countdown -->
+<div class="card">
+  <section>
+    <h2>Time Left</h2>
+    <div class="countdown">
+      <div class="cd-unit"><span class="cd-val" id="cdD">--</span><div class="cd-lbl">DAYS</div></div>
+      <div class="cd-unit"><span class="cd-val" id="cdH">--</span><div class="cd-lbl">HRS</div></div>
+      <div class="cd-unit"><span class="cd-val" id="cdM">--</span><div class="cd-lbl">MIN</div></div>
+      <div class="cd-unit"><span class="cd-val" id="cdS">--</span><div class="cd-lbl">SEC</div></div>
+    </div>
+  </section>
+</div>
+
+<!-- Pledge -->
+<div class="card">
+  <section>
+    <h2>Pledge</h2>
+    <div class="amounts">
+      <button class="amt-btn" data-v="200">200 RSD</button>
+      <button class="amt-btn" data-v="500">500 RSD</button>
+      <button class="amt-btn" data-v="1000">1,000 RSD</button>
+      <button class="amt-btn" data-v="2000">2,000 RSD</button>
+      <button class="amt-btn" data-v="5000">5,000 RSD</button>
+      <button class="amt-btn" data-v="10000">10,000 RSD</button>
+    </div>
+    <div class="custom-wrap">
+      <input type="number" id="customAmt" placeholder="Custom amount (RSD)" min="50"/>
+    </div>
+    <button class="pledge-btn" id="pledgeBtn" disabled>Pledge</button>
+    <div class="my-pledge" id="myPledge"></div>
+  </section>
+</div>
+
+<!-- Leaderboard -->
+<div class="card">
+  <section>
+    <h2>Leaderboard 🏆</h2>
+    <div id="leaderboard"></div>
+  </section>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const tg = window.Telegram?.WebApp;
+tg?.expand();
+const initData = tg?.initData || "";
+
+const GOAL = 30000;
+const DEADLINE = new Date("2026-08-29T00:00:00Z");
+
+let selectedAmt = null;
+
+// ── Amount picker ──────────────────────────────────────────────────────────
+document.querySelectorAll(".amt-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".amt-btn").forEach(b => b.classList.remove("sel"));
+    btn.classList.add("sel");
+    selectedAmt = parseInt(btn.dataset.v);
+    document.getElementById("customAmt").value = "";
+    updatePledgeBtn();
+  });
+});
+document.getElementById("customAmt").addEventListener("input", e => {
+  document.querySelectorAll(".amt-btn").forEach(b => b.classList.remove("sel"));
+  selectedAmt = parseInt(e.target.value) || null;
+  updatePledgeBtn();
+});
+function updatePledgeBtn() {
+  document.getElementById("pledgeBtn").disabled = !(selectedAmt && selectedAmt >= 50);
+}
+
+// ── Pledge ─────────────────────────────────────────────────────────────────
+document.getElementById("pledgeBtn").addEventListener("click", async () => {
+  if (!selectedAmt || selectedAmt < 50) return;
+  const btn = document.getElementById("pledgeBtn");
+  btn.disabled = true;
+  btn.textContent = "Pledging…";
+  try {
+    const res = await fetch("/api/pledge", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({initData, amount: selectedAmt}),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      tg?.HapticFeedback?.notificationOccurred("success");
+      toast("🎉 Pledge saved!");
+      updateProgress(data.total, data.donors, data.goal_reached);
+      showMyPledge(selectedAmt);
+    } else {
+      toast(data.error || "Something went wrong");
+    }
+  } catch { toast("Network error"); }
+  btn.textContent = "Pledge";
+  updatePledgeBtn();
+  loadLeaderboard();
+});
+
+// ── Remove pledge ──────────────────────────────────────────────────────────
+async function removePledge() {
+  const ok = await new Promise(r => {
+    if (tg) tg.showConfirm("Remove your pledge?", r);
+    else r(confirm("Remove your pledge?"));
+  });
+  if (!ok) return;
+  try {
+    const res = await fetch("/api/remove-pledge", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({initData}),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      tg?.HapticFeedback?.notificationOccurred("warning");
+      toast("Pledge removed");
+      document.getElementById("myPledge").innerHTML = "";
+      loadStatus();
+      loadLeaderboard();
+    }
+  } catch { toast("Network error"); }
+}
+
+function showMyPledge(amount) {
+  document.getElementById("myPledge").innerHTML =
+    `Your pledge: <strong>${amount.toLocaleString()} RSD</strong>`
+    + `<span class="remove-link" onclick="removePledge()">Remove</span>`;
+}
+
+// ── Status ─────────────────────────────────────────────────────────────────
+function updateProgress(total, donors, goalReached) {
+  const pct = Math.min(total / GOAL * 100, 100);
+  const bar = document.getElementById("progBar");
+  bar.style.width = pct + "%";
+  bar.classList.toggle("glow", goalReached || pct >= 100);
+  document.getElementById("pct").textContent = (total / GOAL * 100).toFixed(1) + "%";
+  document.getElementById("totalAmt").textContent = total.toLocaleString() + " RSD";
+  document.getElementById("goalBadge").style.display = goalReached ? "block" : "none";
+  if (donors != null)
+    document.getElementById("donorLine").textContent = `${donors} donor${donors !== 1 ? "s" : ""}`;
+}
+
+async function loadStatus() {
+  try {
+    const data = await (await fetch("/api/status")).json();
+    updateProgress(data.total, data.donors, data.goal_reached);
+  } catch {}
+}
+
+async function loadMyPledge() {
+  if (!initData) return;
+  try {
+    const url = `/api/my-pledge?initData=${encodeURIComponent(initData)}`;
+    const data = await (await fetch(url)).json();
+    if (data.amount) showMyPledge(data.amount);
+  } catch {}
+}
+
+// ── Leaderboard ────────────────────────────────────────────────────────────
+async function loadLeaderboard() {
+  try {
+    const rows = await (await fetch("/api/leaderboard")).json();
+    const medals = ["🥇","🥈","🥉"];
+    const lb = document.getElementById("leaderboard");
+    lb.innerHTML = "";
+    if (!rows.length) { lb.innerHTML = '<p style="text-align:center;color:var(--hint)">No pledges yet. Be the first!</p>'; return; }
+    rows.forEach((r, i) => {
+      const div = document.createElement("div");
+      div.className = "lb-row";
+      const name = r.name || (r.username ? "@"+r.username : "Anonymous");
+      div.innerHTML = `<span class="lb-rank">${medals[i] || (i+1)}</span><span class="lb-name">${escHtml(name)}</span><span class="lb-amt">${r.amount.toLocaleString()} RSD</span>`;
+      lb.appendChild(div);
+    });
+  } catch {}
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+// ── Countdown ─────────────────────────────────────────────────────────────
+const cdEls = {D:"cdD", H:"cdH", M:"cdM", S:"cdS"};
+const prevVals = {};
+function tickCountdown() {
+  const diff = Math.max(0, Math.floor((DEADLINE - Date.now()) / 1000));
+  const d = Math.floor(diff / 86400);
+  const h = Math.floor(diff % 86400 / 3600);
+  const m = Math.floor(diff % 3600 / 60);
+  const s = diff % 60;
+  [["D",d],["H",h],["M",m],["S",s]].forEach(([k,v]) => {
+    const el = document.getElementById(cdEls[k]);
+    const str = String(v).padStart(2,"0");
+    if (prevVals[k] !== str) {
+      el.textContent = str;
+      el.classList.remove("bump");
+      void el.offsetWidth;
+      el.classList.add("bump");
+      prevVals[k] = str;
+    }
+  });
+}
+setInterval(tickCountdown, 1000);
+tickCountdown();
+
+// ── Toast ──────────────────────────────────────────────────────────────────
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove("show"), 2500);
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────
+loadStatus();
+loadMyPledge();
+loadLeaderboard();
+setInterval(loadStatus, 10000);
+</script>
+</body>
+</html>
