@@ -2,188 +2,388 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
 <title>Bald Ilia 💈</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-  :root {
-    --bg:     var(--tg-theme-bg-color, #1a1a2e);
-    --sec:    var(--tg-theme-secondary-bg-color, #16213e);
-    --text:   var(--tg-theme-text-color, #eee);
-    --hint:   var(--tg-theme-hint-color, #aaa);
-    --btn:    var(--tg-theme-button-color, #e94560);
-    --btnTxt: var(--tg-theme-button-text-color, #fff);
-    --link:   var(--tg-theme-link-color, #e94560);
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: var(--bg); color: var(--text);
-    min-height: 100vh; padding: 16px;
-  }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sans-serif;
+  background:#0a0a1a;color:#fff;min-height:100vh;overflow-x:hidden;
+}
 
-  /* Lang toggle */
-  .lang-bar { display: flex; justify-content: flex-end; margin-bottom: 12px; }
-  .lang-btn {
-    background: var(--sec); border: none; color: var(--hint);
-    border-radius: 20px; padding: 5px 14px; font-size: .8rem; cursor: pointer;
-    transition: color .2s, background .2s;
-  }
-  .lang-btn.active { background: var(--btn); color: var(--btnTxt); }
+/* ── Animated background ── */
+.bg{position:fixed;inset:0;z-index:0;
+  background:radial-gradient(ellipse at 15% 15%,rgba(124,58,237,.35) 0%,transparent 55%),
+             radial-gradient(ellipse at 85% 85%,rgba(236,72,153,.25) 0%,transparent 55%),
+             #0a0a1a;
+}
+.orb{position:absolute;border-radius:50%;filter:blur(90px);opacity:.35;animation:orb-float 10s ease-in-out infinite}
+.orb-1{width:420px;height:420px;background:#7c3aed;top:-130px;left:-130px;animation-delay:0s}
+.orb-2{width:320px;height:320px;background:#ec4899;bottom:-80px;right:-80px;animation-delay:-4s}
+.orb-3{width:220px;height:220px;background:#f59e0b;top:45%;left:55%;animation-delay:-7s}
+@keyframes orb-float{
+  0%,100%{transform:translate(0,0) scale(1)}
+  33%{transform:translate(28px,-28px) scale(1.06)}
+  66%{transform:translate(-18px,18px) scale(.94)}
+}
 
-  h1 { font-size: 1.6rem; text-align: center; margin-bottom: 4px; }
-  .sub { text-align: center; color: var(--hint); font-size: .85rem; margin-bottom: 20px; }
+/* ── Layout ── */
+.content{position:relative;z-index:1;padding:16px 16px 90px;max-width:480px;margin:0 auto}
 
-  /* Progress */
-  .card { background: var(--sec); border-radius: 16px; padding: 16px; margin-bottom: 14px; }
-  .prog-label { display: flex; justify-content: space-between; font-size: .85rem; color: var(--hint); margin-bottom: 8px; }
-  .prog-wrap { background: rgba(255,255,255,.1); border-radius: 999px; height: 18px; overflow: hidden; }
-  .prog-bar {
-    height: 100%; border-radius: 999px;
-    background: linear-gradient(90deg, #e94560, #f5a623);
-    width: 0%; transition: width 1s cubic-bezier(.4,0,.2,1);
-  }
-  .prog-bar.glow { box-shadow: 0 0 14px #e94560cc; }
-  .prog-total { text-align: center; font-size: 1.8rem; font-weight: 700; margin: 10px 0 2px; }
-  .prog-goal  { text-align: center; color: var(--hint); font-size: .8rem; }
-  .goal-badge {
-    text-align: center; margin-top: 10px; font-size: 1.1rem; font-weight: 600;
-    color: #f5a623; display: none;
-  }
-  .donors-line { text-align: center; font-size: .8rem; color: var(--hint); margin-top: 6px; }
+/* ── Lang ── */
+.lang-bar{display:flex;justify-content:flex-end;gap:6px;margin-bottom:14px}
+.lang-btn{
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);
+  color:rgba(255,255,255,.45);border-radius:20px;padding:5px 16px;
+  font-size:.8rem;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.05em;
+}
+.lang-btn.active{
+  background:linear-gradient(135deg,#7c3aed,#ec4899);border-color:transparent;color:#fff;
+  box-shadow:0 0 18px rgba(124,58,237,.55);
+}
 
-  /* Countdown */
-  .countdown { display: flex; justify-content: center; gap: 12px; }
-  .cd-unit { text-align: center; }
-  .cd-val {
-    background: var(--btn); color: var(--btnTxt);
-    border-radius: 10px; padding: 8px 14px;
-    font-size: 1.5rem; font-weight: 700; min-width: 56px; display: block;
-    transition: transform .15s;
-  }
-  .cd-val.bump { animation: bump .25s ease; }
-  @keyframes bump { 0%{transform:scale(1)} 50%{transform:scale(1.2)} 100%{transform:scale(1)} }
-  .cd-lbl { font-size: .65rem; color: var(--hint); margin-top: 4px; }
+/* ── Hero ── */
+.hero{text-align:center;margin-bottom:22px;padding-top:4px}
+.hero-icon{font-size:4.5rem;display:block;margin-bottom:10px;
+  animation:hero-in .7s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes hero-in{from{transform:scale(0) rotate(-25deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
+.hero h1{
+  font-size:2.2rem;font-weight:900;
+  background:linear-gradient(135deg,#fff 0%,#f59e0b 45%,#ec4899 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  margin-bottom:6px;letter-spacing:-.02em;
+}
+.hero .sub{color:rgba(255,255,255,.45);font-size:.88rem;line-height:1.5}
 
-  /* Pledge */
-  .amounts { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 12px; }
-  .amt-btn {
-    background: var(--bg); border: 2px solid rgba(255,255,255,.15);
-    border-radius: 12px; color: var(--text);
-    padding: 10px 4px; font-size: .9rem; cursor: pointer;
-    transition: border-color .2s, background .2s;
-  }
-  .amt-btn:hover, .amt-btn.sel {
-    border-color: var(--btn); background: color-mix(in srgb, var(--btn) 20%, transparent);
-  }
-  .custom-wrap { display: flex; gap: 8px; margin-bottom: 12px; }
-  .custom-wrap input {
-    flex: 1; background: var(--bg); border: 2px solid rgba(255,255,255,.15);
-    border-radius: 12px; color: var(--text); padding: 10px 14px; font-size: .9rem;
-    outline: none;
-  }
-  .custom-wrap input:focus { border-color: var(--btn); }
-  .pledge-btn {
-    width: 100%; background: var(--btn); color: var(--btnTxt);
-    border: none; border-radius: 12px; padding: 14px;
-    font-size: 1rem; font-weight: 600; cursor: pointer;
-    transition: opacity .2s, transform .1s;
-  }
-  .pledge-btn:active { transform: scale(.98); }
-  .pledge-btn:disabled { opacity: .5; cursor: default; }
-  .my-pledge {
-    text-align: center; margin-top: 12px; font-size: .85rem; color: var(--hint);
-  }
-  .remove-link {
-    color: var(--link); cursor: pointer; text-decoration: underline; margin-left: 6px;
-  }
+/* ── Glass card ── */
+.card{
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);
+  border-radius:24px;padding:20px;margin-bottom:14px;
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  box-shadow:0 8px 40px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.09);
+  position:relative;overflow:hidden;
+}
+.card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.25),transparent);
+}
+.card-title{
+  font-size:.68rem;font-weight:800;letter-spacing:.12em;
+  color:rgba(255,255,255,.35);text-transform:uppercase;margin-bottom:16px;
+}
 
-  /* Leaderboard */
-  .lb-row {
-    display: flex; align-items: center; gap: 10px;
-    padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,.06);
-    animation: fadeIn .4s ease;
-  }
-  .lb-row:last-child { border-bottom: none; }
-  @keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
-  .lb-rank { font-size: .9rem; font-weight: 700; min-width: 22px; color: var(--hint); }
-  .lb-name { flex: 1; font-size: .9rem; }
-  .lb-amt  { font-size: .9rem; font-weight: 600; color: var(--link); }
+/* ── Progress ── */
+.prog-header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:14px}
+.prog-total-big{
+  font-size:2.5rem;font-weight:900;line-height:1;letter-spacing:-.03em;
+  background:linear-gradient(135deg,#fff,#f59e0b);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.prog-meta{text-align:right}
+.prog-pct{
+  font-size:1.3rem;font-weight:800;
+  background:linear-gradient(135deg,#a78bfa,#ec4899);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.prog-goal-txt{font-size:.72rem;color:rgba(255,255,255,.3);margin-top:2px}
+.prog-track{
+  height:14px;background:rgba(255,255,255,.07);border-radius:999px;
+  overflow:visible;position:relative;margin-bottom:12px;
+}
+.prog-fill{
+  height:100%;border-radius:999px;
+  background:linear-gradient(90deg,#7c3aed,#ec4899,#f59e0b);
+  background-size:200% 100%;animation:shimmer 3s linear infinite;
+  width:0%;transition:width 1.3s cubic-bezier(.4,0,.2,1);
+  position:relative;
+}
+.prog-fill.glow{box-shadow:0 0 24px #ec4899,0 0 48px #7c3aed}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.prog-fill::after{
+  content:'✂️';position:absolute;right:-14px;top:50%;transform:translateY(-50%);
+  font-size:1rem;filter:drop-shadow(0 0 8px #f59e0b);
+  opacity:0;transition:opacity .6s;
+}
+.prog-fill.active::after{opacity:1}
+.donors-pill{
+  display:none;align-items:center;gap:6px;
+  background:rgba(124,58,237,.18);border:1px solid rgba(124,58,237,.35);
+  border-radius:999px;padding:4px 14px;font-size:.78rem;color:rgba(255,255,255,.65);
+}
+.goal-badge{
+  display:none;margin-top:12px;padding:12px;border-radius:14px;
+  background:linear-gradient(135deg,rgba(245,158,11,.18),rgba(236,72,153,.18));
+  border:1px solid rgba(245,158,11,.4);text-align:center;font-weight:700;
+  animation:pulse-glow 2s ease-in-out infinite;
+}
+@keyframes pulse-glow{0%,100%{box-shadow:0 0 18px rgba(245,158,11,.25)}50%{box-shadow:0 0 40px rgba(245,158,11,.55)}}
 
-  /* Toast */
-  #toast {
-    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
-    background: #222; color: #fff; padding: 10px 20px; border-radius: 20px;
-    font-size: .9rem; transition: transform .3s; z-index: 999; pointer-events: none;
-    white-space: nowrap;
-  }
-  #toast.show { transform: translateX(-50%) translateY(0); }
+/* ── Countdown ── */
+.countdown{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.cd-unit{
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);
+  border-radius:18px;padding:16px 6px;text-align:center;position:relative;overflow:hidden;
+}
+.cd-unit::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(160deg,rgba(124,58,237,.1),rgba(236,72,153,.08));
+}
+.cd-val{
+  font-size:2.1rem;font-weight:900;display:block;line-height:1;
+  background:linear-gradient(180deg,#fff,rgba(255,255,255,.65));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  position:relative;
+}
+.cd-val.bump{animation:flip .28s ease}
+@keyframes flip{0%{transform:scaleY(1)}45%{transform:scaleY(.65)}100%{transform:scaleY(1)}}
+.cd-lbl{font-size:.52rem;letter-spacing:.13em;color:rgba(255,255,255,.28);
+  font-weight:800;text-transform:uppercase;margin-top:5px;position:relative}
 
-  section h2 { font-size: 1rem; font-weight: 600; margin-bottom: 12px; color: var(--hint); text-transform: uppercase; letter-spacing: .06em; }
+/* ── Pledge amounts ── */
+.amounts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.amt-btn{
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);
+  border-radius:14px;color:rgba(255,255,255,.75);padding:13px 4px;
+  font-size:.84rem;font-weight:700;cursor:pointer;transition:all .22s;
+  position:relative;overflow:hidden;letter-spacing:.01em;
+}
+.amt-btn::after{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(circle at center,rgba(124,58,237,.45),transparent 70%);
+  opacity:0;transition:opacity .3s;
+}
+.amt-btn:hover{border-color:rgba(124,58,237,.5);transform:translateY(-2px);
+  box-shadow:0 8px 24px rgba(124,58,237,.2)}
+.amt-btn:hover::after{opacity:1}
+.amt-btn.sel{
+  background:linear-gradient(135deg,rgba(124,58,237,.28),rgba(236,72,153,.28));
+  border-color:rgba(124,58,237,.9);color:#fff;
+  box-shadow:0 0 22px rgba(124,58,237,.4),inset 0 0 18px rgba(124,58,237,.1);
+  transform:translateY(-2px);
+}
+.custom-wrap{margin-bottom:14px}
+.custom-wrap input{
+  width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);
+  border-radius:14px;color:#fff;padding:13px 16px;font-size:.95rem;outline:none;transition:all .22s;
+}
+.custom-wrap input:focus{border-color:rgba(124,58,237,.8);box-shadow:0 0 22px rgba(124,58,237,.2)}
+.custom-wrap input::placeholder{color:rgba(255,255,255,.22)}
+.pledge-btn{
+  width:100%;
+  background:linear-gradient(135deg,#7c3aed,#ec4899);
+  border:none;border-radius:16px;color:#fff;padding:17px;
+  font-size:1.05rem;font-weight:800;cursor:pointer;transition:all .22s;
+  position:relative;overflow:hidden;
+  box-shadow:0 8px 34px rgba(124,58,237,.45);letter-spacing:.03em;
+}
+.pledge-btn::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,.22),transparent);
+  opacity:0;transition:opacity .2s;
+}
+.pledge-btn:hover{transform:translateY(-2px);box-shadow:0 14px 44px rgba(124,58,237,.55)}
+.pledge-btn:hover::before{opacity:1}
+.pledge-btn:active{transform:scale(.98)}
+.pledge-btn:disabled{
+  background:rgba(255,255,255,.07);color:rgba(255,255,255,.25);
+  box-shadow:none;cursor:default;transform:none;
+}
+.my-pledge{text-align:center;margin-top:14px;font-size:.84rem;color:rgba(255,255,255,.45);line-height:1.6}
+.my-pledge strong{color:#f59e0b}
+.remove-link{
+  display:inline-block;margin-left:8px;color:rgba(236,72,153,.8);cursor:pointer;
+  font-size:.78rem;border:1px solid rgba(236,72,153,.3);border-radius:20px;padding:2px 10px;
+  transition:all .2s;
+}
+.remove-link:hover{background:rgba(236,72,153,.15);border-color:rgba(236,72,153,.65)}
+
+/* ── Leaderboard ── */
+.lb-row{
+  display:flex;align-items:center;gap:12px;padding:11px 0;
+  border-bottom:1px solid rgba(255,255,255,.05);animation:slide-in .4s ease both;
+}
+.lb-row:last-child{border-bottom:none}
+@keyframes slide-in{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:none}}
+.lb-rank{font-size:1.1rem;min-width:26px;text-align:center}
+.lb-avatar{
+  width:38px;height:38px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,#7c3aed,#ec4899);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:.95rem;
+}
+.lb-row:first-child .lb-avatar{
+  background:linear-gradient(135deg,#f59e0b,#f97316);
+  box-shadow:0 0 18px rgba(245,158,11,.5);
+}
+.lb-info{flex:1;min-width:0}
+.lb-name{font-size:.9rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lb-uname{font-size:.72rem;color:rgba(255,255,255,.3);margin-top:1px}
+.lb-amt{
+  font-weight:800;font-size:.92rem;white-space:nowrap;
+  background:linear-gradient(135deg,#f59e0b,#ec4899);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.lb-empty{text-align:center;color:rgba(255,255,255,.3);padding:18px 0;font-size:.88rem}
+
+/* ── Confetti canvas ── */
+#confetti-canvas{position:fixed;inset:0;z-index:500;pointer-events:none}
+
+/* ── Crown overlay ── */
+#crown-overlay{
+  position:fixed;inset:0;z-index:600;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  opacity:0;pointer-events:none;transition:opacity .4s;padding:24px;
+}
+#crown-overlay.show{opacity:1;pointer-events:all}
+.crown-icon{font-size:6rem;display:block;animation:none}
+.crown-icon.animate{animation:crown-pop .85s cubic-bezier(.34,1.56,.64,1) both}
+@keyframes crown-pop{
+  0%{transform:scale(0) rotate(-35deg);opacity:0}
+  60%{transform:scale(1.35) rotate(8deg);opacity:1}
+  100%{transform:scale(1) rotate(0);opacity:1}
+}
+.crown-rays{
+  position:absolute;width:200px;height:200px;
+  animation:rays-spin 4s linear infinite;opacity:.6;
+}
+.crown-rays::before,.crown-rays::after{
+  content:'';position:absolute;inset:0;border-radius:50%;
+  background:conic-gradient(from 0deg,transparent 0deg,rgba(245,158,11,.4) 10deg,transparent 20deg,transparent 40deg,rgba(245,158,11,.4) 50deg,transparent 60deg,transparent 80deg,rgba(245,158,11,.4) 90deg,transparent 100deg,transparent 120deg,rgba(245,158,11,.4) 130deg,transparent 140deg,transparent 160deg,rgba(245,158,11,.4) 170deg,transparent 180deg,transparent 200deg,rgba(245,158,11,.4) 210deg,transparent 220deg,transparent 240deg,rgba(245,158,11,.4) 250deg,transparent 260deg,transparent 280deg,rgba(245,158,11,.4) 290deg,transparent 300deg,transparent 320deg,rgba(245,158,11,.4) 330deg,transparent 340deg,transparent 360deg);
+}
+@keyframes rays-spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.crown-center{position:relative;display:flex;align-items:center;justify-content:center;margin-bottom:8px}
+.crown-title{
+  font-size:2rem;font-weight:900;text-align:center;margin-bottom:8px;
+  background:linear-gradient(135deg,#f59e0b,#fff,#f59e0b);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  animation:fade-up .5s .25s both;
+}
+.crown-name{
+  font-size:1.25rem;font-weight:700;color:#fff;text-align:center;
+  animation:fade-up .5s .4s both;
+}
+.crown-sub{
+  font-size:.85rem;color:rgba(255,255,255,.45);text-align:center;margin-top:4px;
+  animation:fade-up .5s .55s both;
+}
+@keyframes fade-up{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+.crown-close{
+  margin-top:30px;padding:14px 40px;
+  background:linear-gradient(135deg,#f59e0b,#ec4899);
+  border:none;border-radius:999px;color:#fff;font-weight:800;font-size:1.05rem;
+  cursor:pointer;animation:fade-up .5s .75s both;
+  box-shadow:0 8px 36px rgba(245,158,11,.45);letter-spacing:.03em;
+}
+
+/* ── Success flash ── */
+#success-flash{
+  position:fixed;inset:0;z-index:450;pointer-events:none;opacity:0;
+  background:radial-gradient(circle at center,rgba(124,58,237,.35),transparent 65%);
+}
+#success-flash.flash{animation:flash-anim .55s ease}
+@keyframes flash-anim{0%{opacity:0}30%{opacity:1}100%{opacity:0}}
+
+/* ── Toast ── */
+#toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(90px);
+  background:rgba(20,20,35,.95);color:#fff;
+  border:1px solid rgba(255,255,255,.1);padding:13px 26px;border-radius:28px;
+  font-size:.9rem;font-weight:700;
+  box-shadow:0 10px 40px rgba(0,0,0,.45);
+  transition:transform .38s cubic-bezier(.34,1.56,.64,1);
+  z-index:999;pointer-events:none;white-space:nowrap;backdrop-filter:blur(24px);
+}
+#toast.show{transform:translateX(-50%) translateY(0)}
 </style>
 </head>
 <body>
 
-<div class="lang-bar">
-  <button class="lang-btn active" id="btnEN" onclick="setLang('en')">EN</button>
-  <button class="lang-btn" id="btnRU" onclick="setLang('ru')" style="margin-left:6px">RU</button>
+<div class="bg">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
 </div>
 
-<h1>💈 <span data-i="title"></span></h1>
-<p class="sub" data-i="sub"></p>
+<canvas id="confetti-canvas"></canvas>
+<div id="success-flash"></div>
 
-<!-- Progress -->
-<div class="card">
-  <div class="prog-label">
-    <span data-i="progress"></span>
-    <span id="pct">0%</span>
+<!-- Crown overlay -->
+<div id="crown-overlay">
+  <div class="crown-center">
+    <div class="crown-rays"></div>
+    <span class="crown-icon" id="crownIcon">👑</span>
   </div>
-  <div class="prog-wrap"><div class="prog-bar" id="progBar"></div></div>
-  <div class="prog-total" id="totalAmt">0 RSD</div>
-  <div class="prog-goal" data-i="goal_line"></div>
-  <div class="goal-badge" id="goalBadge" data-i="goal_reached"></div>
-  <p class="donors-line" id="donorLine"></p>
+  <div class="crown-title" id="crownTitle"></div>
+  <div class="crown-name" id="crownName"></div>
+  <div class="crown-sub"  id="crownSub"></div>
+  <button class="crown-close" id="crownClose" onclick="closeCrown()"></button>
 </div>
 
-<!-- Countdown -->
-<div class="card">
-  <section>
-    <h2 data-i="time_left"></h2>
+<div class="content">
+
+  <div class="lang-bar">
+    <button class="lang-btn active" id="btnEN" onclick="setLang('en')">EN</button>
+    <button class="lang-btn"        id="btnRU" onclick="setLang('ru')">RU</button>
+  </div>
+
+  <div class="hero">
+    <span class="hero-icon">💈</span>
+    <h1 data-i="title"></h1>
+    <p class="sub" data-i="sub"></p>
+  </div>
+
+  <!-- Progress -->
+  <div class="card">
+    <div class="card-title" data-i="progress"></div>
+    <div class="prog-header">
+      <div class="prog-total-big" id="totalAmt">0 RSD</div>
+      <div class="prog-meta">
+        <div class="prog-pct" id="pct">0%</div>
+        <div class="prog-goal-txt" data-i="goal_line"></div>
+      </div>
+    </div>
+    <div class="prog-track"><div class="prog-fill" id="progBar"></div></div>
+    <div class="donors-pill" id="donorPill"></div>
+    <div class="goal-badge" id="goalBadge" data-i="goal_reached"></div>
+  </div>
+
+  <!-- Countdown -->
+  <div class="card">
+    <div class="card-title" data-i="time_left"></div>
     <div class="countdown">
       <div class="cd-unit"><span class="cd-val" id="cdD">--</span><div class="cd-lbl" data-i="days"></div></div>
       <div class="cd-unit"><span class="cd-val" id="cdH">--</span><div class="cd-lbl" data-i="hrs"></div></div>
       <div class="cd-unit"><span class="cd-val" id="cdM">--</span><div class="cd-lbl" data-i="min"></div></div>
       <div class="cd-unit"><span class="cd-val" id="cdS">--</span><div class="cd-lbl" data-i="sec"></div></div>
     </div>
-  </section>
-</div>
+  </div>
 
-<!-- Pledge -->
-<div class="card">
-  <section>
-    <h2 data-i="pledge_heading"></h2>
+  <!-- Pledge -->
+  <div class="card">
+    <div class="card-title" data-i="pledge_heading"></div>
     <div class="amounts">
       <button class="amt-btn" data-v="500">500 RSD</button>
-      <button class="amt-btn" data-v="1000">1,000 RSD</button>
-      <button class="amt-btn" data-v="3000">3,000 RSD</button>
-      <button class="amt-btn" data-v="5000">5,000 RSD</button>
-      <button class="amt-btn" data-v="10000">10,000 RSD</button>
-      <button class="amt-btn" data-v="15000">15,000 RSD</button>
+      <button class="amt-btn" data-v="1000">1 000 RSD</button>
+      <button class="amt-btn" data-v="3000">3 000 RSD</button>
+      <button class="amt-btn" data-v="5000">5 000 RSD</button>
+      <button class="amt-btn" data-v="10000">10 000 RSD</button>
+      <button class="amt-btn" data-v="15000">15 000 RSD</button>
     </div>
     <div class="custom-wrap">
       <input type="number" id="customAmt" min="50"/>
     </div>
     <button class="pledge-btn" id="pledgeBtn" disabled data-i="pledge_btn"></button>
     <div class="my-pledge" id="myPledge"></div>
-  </section>
-</div>
+  </div>
 
-<!-- Leaderboard -->
-<div class="card">
-  <section>
-    <h2 data-i="leaderboard"></h2>
+  <!-- Leaderboard -->
+  <div class="card">
+    <div class="card-title" data-i="leaderboard"></div>
     <div id="leaderboard"></div>
-  </section>
+  </div>
+
 </div>
 
 <div id="toast"></div>
@@ -192,268 +392,289 @@
 const tg = window.Telegram?.WebApp;
 tg?.expand();
 const initData = tg?.initData || "";
-
 const GOAL = 30000;
 const DEADLINE = new Date("2026-08-29T00:00:00Z");
 
-// ── i18n ───────────────────────────────────────────────────────────────────
+/* ── i18n ─────────────────────────────────────────────────────────── */
 const T = {
-  en: {
-    title:         "Bald Ilia",
-    sub:           "Help us shave Ilia's head by August 29, 2026!",
-    progress:      "Progress",
-    goal_line:     "Goal: 30,000 RSD",
-    goal_reached:  "🎉 Goal reached! Ilia is going bald!",
-    time_left:     "Time Left",
-    days: "DAYS", hrs: "HRS", min: "MIN", sec: "SEC",
-    pledge_heading: "Pledge",
-    custom_placeholder: "Custom amount (RSD)",
-    pledge_btn:    "Pledge",
-    pledging:      "Pledging…",
-    saved:         "🎉 Pledge saved!",
-    removed:       "Pledge removed",
-    net_err:       "Network error",
-    confirm_remove:"Remove your pledge?",
-    your_pledge:   "Your pledge:",
-    remove:        "Remove",
-    leaderboard:   "Leaderboard 🏆",
-    no_pledges:    "No pledges yet. Be the first!",
-    donors_one:    "donor",
-    donors_many:   "donors",
+  en:{
+    title:"Bald Ilia",sub:"Help us shave Ilia's head by August 29, 2026!",
+    progress:"Progress",goal_line:"Goal: 30,000 RSD",
+    goal_reached:"🎉 Goal reached! Ilia is going bald!",time_left:"Time Left",
+    days:"DAYS",hrs:"HRS",min:"MIN",sec:"SEC",
+    pledge_heading:"Pledge Amount",custom_placeholder:"Custom amount (RSD)",
+    pledge_btn:"Pledge Now 🪒",pledging:"Pledging…",
+    saved:"🎉 Pledge saved!",removed:"Pledge removed",net_err:"Network error",
+    confirm_remove:"Remove your pledge?",your_pledge:"Your pledge:",remove:"Remove",
+    leaderboard:"Leaderboard 🏆",no_pledges:"No pledges yet — be the first!",
+    donors_one:"donor",donors_many:"donors",
+    crown_title:"👑 New Leader!",crown_sub:"just took the top spot!",crown_close:"🔥 Let's go!",
   },
-  ru: {
-    title:         "Лысый Илья",
-    sub:           "Поможем обрить Илью до 29 августа 2026!",
-    progress:      "Прогресс",
-    goal_line:     "Цель: 30 000 RSD",
-    goal_reached:  "🎉 Цель достигнута! Илья идёт бриться!",
-    time_left:     "Осталось времени",
-    days: "ДН", hrs: "ЧАС", min: "МИН", sec: "СЕК",
-    pledge_heading: "Пожертвовать",
-    custom_placeholder: "Своя сумма (RSD)",
-    pledge_btn:    "Пожертвовать",
-    pledging:      "Отправляем…",
-    saved:         "🎉 Пожертвование сохранено!",
-    removed:       "Пожертвование удалено",
-    net_err:       "Ошибка сети",
-    confirm_remove:"Удалить пожертвование?",
-    your_pledge:   "Ваше пожертвование:",
-    remove:        "Удалить",
-    leaderboard:   "Таблица лидеров 🏆",
-    no_pledges:    "Пока нет пожертвований. Будь первым!",
-    donors_one:    "участник",
-    donors_many:   "участников",
+  ru:{
+    title:"Лысый Илья",sub:"Поможем обрить Илью до 29 августа 2026!",
+    progress:"Прогресс",goal_line:"Цель: 30 000 RSD",
+    goal_reached:"🎉 Цель достигнута! Илья идёт бриться!",time_left:"Осталось времени",
+    days:"ДН",hrs:"ЧАС",min:"МИН",sec:"СЕК",
+    pledge_heading:"Сумма пожертвования",custom_placeholder:"Своя сумма (RSD)",
+    pledge_btn:"Пожертвовать 🪒",pledging:"Отправляем…",
+    saved:"🎉 Пожертвование сохранено!",removed:"Пожертвование удалено",net_err:"Ошибка сети",
+    confirm_remove:"Удалить пожертвование?",your_pledge:"Ваше пожертвование:",remove:"Удалить",
+    leaderboard:"Таблица лидеров 🏆",no_pledges:"Пока нет пожертвований — будь первым!",
+    donors_one:"участник",donors_many:"участников",
+    crown_title:"👑 Новый лидер!",crown_sub:"захватил первое место!",crown_close:"🔥 Огонь!",
   },
 };
-
-// Auto-detect from Telegram language code
 const tgLang = tg?.initDataUnsafe?.user?.language_code || navigator.language || "en";
-let lang = tgLang.startsWith("ru") ? "ru" : "en";
+let lang = localStorage.getItem("lang") || (tgLang.startsWith("ru") ? "ru" : "en");
+function t(k){ return T[lang][k] || T.en[k] || k; }
 
-function t(key) { return T[lang][key] || T.en[key] || key; }
-
-function setLang(l) {
-  lang = l;
-  localStorage.setItem("lang", l);
-  document.getElementById("btnEN").classList.toggle("active", l === "en");
-  document.getElementById("btnRU").classList.toggle("active", l === "ru");
-  document.querySelectorAll("[data-i]").forEach(el => {
-    el.textContent = t(el.dataset.i);
-  });
+function setLang(l){
+  lang = l; localStorage.setItem("lang", l);
+  document.getElementById("btnEN").classList.toggle("active", l==="en");
+  document.getElementById("btnRU").classList.toggle("active", l==="ru");
+  document.querySelectorAll("[data-i]").forEach(el=>{ el.textContent = t(el.dataset.i); });
   document.getElementById("customAmt").placeholder = t("custom_placeholder");
-  document.getElementById("pledgeBtn").textContent = t("pledge_btn");
   updateDonorLine(lastDonors);
   renderMyPledge(lastMyPledge);
-  loadLeaderboard();
+  renderLeaderboard(lastLeaderboard);
 }
 
-// ── Amount picker ──────────────────────────────────────────────────────────
+/* ── Confetti ─────────────────────────────────────────────────────── */
+const cc = document.getElementById("confetti-canvas");
+const cx = cc.getContext("2d");
+let particles = [];
+function resizeCC(){ cc.width=innerWidth; cc.height=innerHeight; }
+window.addEventListener("resize", resizeCC); resizeCC();
+
+function spawnConfetti(cx2, cy2, count=80, gold=false){
+  const colors = gold
+    ? ["#f59e0b","#fbbf24","#fcd34d","#fff7","#f97316","#fef9c3"]
+    : ["#7c3aed","#ec4899","#f59e0b","#60a5fa","#34d399","#f87171","#fff"];
+  for(let i=0;i<count;i++){
+    const angle = Math.random()*Math.PI*2;
+    const spd = gold ? 5+Math.random()*12 : 3+Math.random()*8;
+    particles.push({
+      x:cx2, y:cy2,
+      vx:Math.cos(angle)*spd, vy:Math.sin(angle)*spd-(gold?8:4),
+      color:colors[Math.random()*colors.length|0],
+      sz:4+Math.random()*(gold?9:6),
+      shape:Math.random()<.5?"c":"r",
+      rot:Math.random()*Math.PI*2,
+      rSpd:(Math.random()-.5)*.32,
+      alpha:1, g:.18+Math.random()*.1, drag:.97,
+    });
+  }
+}
+function tickParticles(){
+  cx.clearRect(0,0,cc.width,cc.height);
+  particles = particles.filter(p=>p.alpha>.01);
+  for(const p of particles){
+    p.vy+=p.g; p.vx*=p.drag; p.vy*=p.drag;
+    p.x+=p.vx; p.y+=p.vy; p.rot+=p.rSpd;
+    p.alpha -= p.y>cc.height ? .06 : .007;
+    cx.save();
+    cx.globalAlpha=p.alpha; cx.translate(p.x,p.y); cx.rotate(p.rot);
+    cx.fillStyle=p.color;
+    if(p.shape==="c"){ cx.beginPath(); cx.arc(0,0,p.sz/2,0,Math.PI*2); cx.fill(); }
+    else { cx.fillRect(-p.sz/2,-p.sz/4,p.sz,p.sz/2); }
+    cx.restore();
+  }
+  requestAnimationFrame(tickParticles);
+}
+tickParticles();
+
+/* ── Crown overlay ────────────────────────────────────────────────── */
+function showCrown(name, amount){
+  document.getElementById("crownTitle").textContent = t("crown_title");
+  document.getElementById("crownName").textContent  = name;
+  document.getElementById("crownSub").textContent   = `${amount.toLocaleString()} RSD — ${t("crown_sub")}`;
+  document.getElementById("crownClose").textContent = t("crown_close");
+  const icon = document.getElementById("crownIcon");
+  icon.classList.remove("animate"); void icon.offsetWidth; icon.classList.add("animate");
+  document.getElementById("crown-overlay").classList.add("show");
+  tg?.HapticFeedback?.notificationOccurred("success");
+  // Burst from center
+  spawnConfetti(cc.width/2, cc.height/2, 180, true);
+  // Second wave
+  setTimeout(()=>spawnConfetti(cc.width/2, cc.height/2, 120, true), 350);
+}
+function closeCrown(){
+  document.getElementById("crown-overlay").classList.remove("show");
+}
+
+/* ── Amount picker ────────────────────────────────────────────────── */
 let selectedAmt = null;
-document.querySelectorAll(".amt-btn").forEach(btn => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".amt-btn").forEach(b => b.classList.remove("sel"));
+document.querySelectorAll(".amt-btn").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    document.querySelectorAll(".amt-btn").forEach(b=>b.classList.remove("sel"));
     btn.classList.add("sel");
     selectedAmt = parseInt(btn.dataset.v);
     document.getElementById("customAmt").value = "";
     updatePledgeBtn();
+    tg?.HapticFeedback?.selectionChanged();
   });
 });
-document.getElementById("customAmt").addEventListener("input", e => {
-  document.querySelectorAll(".amt-btn").forEach(b => b.classList.remove("sel"));
-  selectedAmt = parseInt(e.target.value) || null;
+document.getElementById("customAmt").addEventListener("input",e=>{
+  document.querySelectorAll(".amt-btn").forEach(b=>b.classList.remove("sel"));
+  selectedAmt = parseInt(e.target.value)||null;
   updatePledgeBtn();
 });
-function updatePledgeBtn() {
-  const btn = document.getElementById("pledgeBtn");
-  btn.disabled = !(selectedAmt && selectedAmt >= 50);
+function updatePledgeBtn(){
+  document.getElementById("pledgeBtn").disabled = !(selectedAmt && selectedAmt>=50);
 }
 
-// ── Pledge ─────────────────────────────────────────────────────────────────
-document.getElementById("pledgeBtn").addEventListener("click", async () => {
-  if (!selectedAmt || selectedAmt < 50) return;
+/* ── Pledge ───────────────────────────────────────────────────────── */
+let prevTopAmt  = 0;
+let prevTopName = "";
+let lastLeaderboard = [];
+
+document.getElementById("pledgeBtn").addEventListener("click", async()=>{
+  if(!selectedAmt || selectedAmt<50) return;
   const btn = document.getElementById("pledgeBtn");
-  btn.disabled = true;
-  btn.textContent = t("pledging");
-  try {
-    const res = await fetch("/api/pledge", {
-      method: "POST",
-      headers: {"Content-Type":"application/json"},
-      body: JSON.stringify({initData, amount: selectedAmt}),
-    });
+  btn.disabled=true; btn.textContent=t("pledging");
+  const myName = tg?.initDataUnsafe?.user?.first_name || "";
+  const wasTopAmt  = prevTopAmt;
+  const wasTopName = prevTopName;
+
+  try{
+    const res  = await fetch("/api/pledge",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({initData,amount:selectedAmt})});
     const data = await res.json();
-    if (data.ok) {
-      tg?.HapticFeedback?.notificationOccurred("success");
-      toast(t("saved"));
+    if(data.ok){
+      // flash
+      const fl = document.getElementById("success-flash");
+      fl.classList.remove("flash"); void fl.offsetWidth; fl.classList.add("flash");
       updateProgress(data.total, data.donors, data.goal_reached);
       renderMyPledge(selectedAmt);
+
+      // reload leaderboard
+      const lb = await (await fetch("/api/leaderboard")).json();
+      renderLeaderboard(lb);
+
+      const newTop = lb[0];
+      const iAmTop = newTop && myName && newTop.name === myName;
+      const outbid = selectedAmt > wasTopAmt || (iAmTop && wasTopName && wasTopName !== myName);
+
+      if(iAmTop && outbid){
+        setTimeout(()=>showCrown(myName, selectedAmt), 420);
+      } else {
+        spawnConfetti(cc.width/2, cc.height*.65, 90, false);
+        toast(t("saved"));
+        tg?.HapticFeedback?.notificationOccurred("success");
+      }
     } else {
-      toast(data.error || "Error");
+      toast(data.error||"Error");
+      tg?.HapticFeedback?.notificationOccurred("error");
     }
-  } catch { toast(t("net_err")); }
-  btn.textContent = t("pledge_btn");
-  updatePledgeBtn();
-  loadLeaderboard();
+  } catch{ toast(t("net_err")); }
+  btn.textContent=t("pledge_btn"); updatePledgeBtn();
 });
 
-// ── Remove pledge ──────────────────────────────────────────────────────────
+/* ── Remove pledge ────────────────────────────────────────────────── */
 let lastMyPledge = null;
-async function removePledge() {
-  const ok = await new Promise(r => {
-    if (tg) tg.showConfirm(t("confirm_remove"), r);
+async function removePledge(){
+  const ok = await new Promise(r=>{
+    if(tg) tg.showConfirm(t("confirm_remove"),r);
     else r(confirm(t("confirm_remove")));
   });
-  if (!ok) return;
-  try {
-    const res = await fetch("/api/remove-pledge", {
-      method: "POST",
-      headers: {"Content-Type":"application/json"},
-      body: JSON.stringify({initData}),
-    });
+  if(!ok) return;
+  try{
+    const res  = await fetch("/api/remove-pledge",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({initData})});
     const data = await res.json();
-    if (data.ok) {
+    if(data.ok){
       tg?.HapticFeedback?.notificationOccurred("warning");
-      toast(t("removed"));
-      lastMyPledge = null;
-      document.getElementById("myPledge").innerHTML = "";
-      loadStatus();
-      loadLeaderboard();
+      toast(t("removed")); lastMyPledge=null;
+      document.getElementById("myPledge").innerHTML="";
+      loadStatus(); loadLeaderboard();
     }
-  } catch { toast(t("net_err")); }
+  } catch{ toast(t("net_err")); }
 }
-
-function renderMyPledge(amount) {
-  lastMyPledge = amount;
-  if (!amount) { document.getElementById("myPledge").innerHTML = ""; return; }
-  document.getElementById("myPledge").innerHTML =
+function renderMyPledge(amount){
+  lastMyPledge=amount;
+  if(!amount){ document.getElementById("myPledge").innerHTML=""; return; }
+  document.getElementById("myPledge").innerHTML=
     `${t("your_pledge")} <strong>${amount.toLocaleString()} RSD</strong>`
-    + `<span class="remove-link" onclick="removePledge()"> ${t("remove")}</span>`;
+    +`<span class="remove-link" onclick="removePledge()"> ${t("remove")}</span>`;
 }
 
-// ── Progress ───────────────────────────────────────────────────────────────
+/* ── Progress ─────────────────────────────────────────────────────── */
 let lastDonors = null;
-function updateDonorLine(donors) {
-  lastDonors = donors;
-  if (donors == null) return;
-  const word = (lang === "ru")
-    ? (donors === 1 ? T.ru.donors_one : T.ru.donors_many)
-    : (donors === 1 ? T.en.donors_one : T.en.donors_many);
-  document.getElementById("donorLine").textContent = `${donors} ${word}`;
+function updateDonorLine(n){
+  lastDonors=n;
+  const pill = document.getElementById("donorPill");
+  if(n==null){ pill.style.display="none"; return; }
+  pill.style.display="inline-flex";
+  const w = lang==="ru" ? (n===1?T.ru.donors_one:T.ru.donors_many) : (n===1?T.en.donors_one:T.en.donors_many);
+  pill.textContent = `${n} ${w}`;
 }
-
-function updateProgress(total, donors, goalReached) {
-  const pct = Math.min(total / GOAL * 100, 100);
+function updateProgress(total, donors, goalReached){
+  const pct = Math.min(total/GOAL*100,100);
   const bar = document.getElementById("progBar");
-  bar.style.width = pct + "%";
-  bar.classList.toggle("glow", pct >= 100);
-  document.getElementById("pct").textContent = (total / GOAL * 100).toFixed(1) + "%";
-  document.getElementById("totalAmt").textContent = total.toLocaleString() + " RSD";
-  document.getElementById("goalBadge").style.display = goalReached ? "block" : "none";
+  bar.style.width = pct+"%";
+  bar.classList.toggle("glow", pct>=100);
+  bar.classList.toggle("active", pct>0 && pct<100);
+  document.getElementById("pct").textContent       = (total/GOAL*100).toFixed(1)+"%";
+  document.getElementById("totalAmt").textContent  = total.toLocaleString()+" RSD";
+  document.getElementById("goalBadge").style.display = goalReached?"block":"none";
   updateDonorLine(donors);
 }
-
-async function loadStatus() {
-  try {
-    const data = await (await fetch("/api/status")).json();
-    updateProgress(data.total, data.donors, data.goal_reached);
-  } catch {}
+async function loadStatus(){
+  try{ const d=await(await fetch("/api/status")).json(); updateProgress(d.total,d.donors,d.goal_reached); }catch{}
+}
+async function loadMyPledge(){
+  if(!initData) return;
+  try{ const d=await(await fetch(`/api/my-pledge?initData=${encodeURIComponent(initData)}`)).json(); if(d.amount) renderMyPledge(d.amount); }catch{}
 }
 
-async function loadMyPledge() {
-  if (!initData) return;
-  try {
-    const url = `/api/my-pledge?initData=${encodeURIComponent(initData)}`;
-    const data = await (await fetch(url)).json();
-    if (data.amount) renderMyPledge(data.amount);
-  } catch {}
-}
-
-// ── Leaderboard ────────────────────────────────────────────────────────────
-async function loadLeaderboard() {
-  try {
-    const rows = await (await fetch("/api/leaderboard")).json();
-    const medals = ["🥇","🥈","🥉"];
-    const lb = document.getElementById("leaderboard");
-    lb.innerHTML = "";
-    if (!rows.length) {
-      lb.innerHTML = `<p style="text-align:center;color:var(--hint)">${t("no_pledges")}</p>`;
-      return;
-    }
-    rows.forEach((r, i) => {
-      const div = document.createElement("div");
-      div.className = "lb-row";
-      const name = r.name || (r.username ? "@"+r.username : "—");
-      div.innerHTML = `<span class="lb-rank">${medals[i] || (i+1)}</span>`
-        + `<span class="lb-name">${escHtml(name)}</span>`
-        + `<span class="lb-amt">${r.amount.toLocaleString()} RSD</span>`;
-      lb.appendChild(div);
-    });
-  } catch {}
-}
-
-function escHtml(s) {
-  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
-}
-
-// ── Countdown ─────────────────────────────────────────────────────────────
-const cdEls = {D:"cdD", H:"cdH", M:"cdM", S:"cdS"};
-const prevVals = {};
-function tickCountdown() {
-  const diff = Math.max(0, Math.floor((DEADLINE - Date.now()) / 1000));
-  const d = Math.floor(diff / 86400);
-  const h = Math.floor(diff % 86400 / 3600);
-  const m = Math.floor(diff % 3600 / 60);
-  const s = diff % 60;
-  [["D",d],["H",h],["M",m],["S",s]].forEach(([k,v]) => {
-    const el = document.getElementById(cdEls[k]);
-    const str = String(v).padStart(2,"0");
-    if (prevVals[k] !== str) {
-      el.textContent = str;
-      el.classList.remove("bump");
-      void el.offsetWidth;
-      el.classList.add("bump");
-      prevVals[k] = str;
-    }
+/* ── Leaderboard ──────────────────────────────────────────────────── */
+function renderLeaderboard(rows){
+  lastLeaderboard = rows;
+  if(rows.length){ prevTopAmt=rows[0].amount; prevTopName=rows[0].name; }
+  const medals=["🥇","🥈","🥉"];
+  const lb=document.getElementById("leaderboard");
+  lb.innerHTML="";
+  if(!rows.length){ lb.innerHTML=`<div class="lb-empty">${t("no_pledges")}</div>`; return; }
+  rows.forEach((r,i)=>{
+    const div=document.createElement("div"); div.className="lb-row";
+    div.style.animationDelay=`${i*55}ms`;
+    const name=r.name||(r.username?"@"+r.username:"—");
+    const init=(name[0]||"?").toUpperCase();
+    div.innerHTML=
+      `<span class="lb-rank">${medals[i]||(i+1)}</span>`
+      +`<div class="lb-avatar">${esc(init)}</div>`
+      +`<div class="lb-info"><div class="lb-name">${esc(name)}</div>${r.username?`<div class="lb-uname">@${esc(r.username)}</div>`:""}</div>`
+      +`<span class="lb-amt">${r.amount.toLocaleString()} RSD</span>`;
+    lb.appendChild(div);
   });
 }
-setInterval(tickCountdown, 1000);
-tickCountdown();
+async function loadLeaderboard(){
+  try{ renderLeaderboard(await(await fetch("/api/leaderboard")).json()); }catch{}
+}
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 
-// ── Toast ──────────────────────────────────────────────────────────────────
-let toastTimer;
-function toast(msg) {
-  const el = document.getElementById("toast");
-  el.textContent = msg;
-  el.classList.add("show");
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove("show"), 2500);
+/* ── Countdown ────────────────────────────────────────────────────── */
+const prev={};
+function tick(){
+  const diff=Math.max(0,Math.floor((DEADLINE-Date.now())/1000));
+  [["D",Math.floor(diff/86400)],["H",Math.floor(diff%86400/3600)],
+   ["M",Math.floor(diff%3600/60)],["S",diff%60]].forEach(([k,v])=>{
+    const el=document.getElementById("cd"+k);
+    const s=String(v).padStart(2,"0");
+    if(prev[k]!==s){ el.textContent=s; el.classList.remove("bump"); void el.offsetWidth; el.classList.add("bump"); prev[k]=s; }
+  });
+}
+setInterval(tick,1000); tick();
+
+/* ── Toast ────────────────────────────────────────────────────────── */
+let tt;
+function toast(msg){
+  const el=document.getElementById("toast");
+  el.textContent=msg; el.classList.add("show");
+  clearTimeout(tt); tt=setTimeout(()=>el.classList.remove("show"),2600);
 }
 
-// ── Init ───────────────────────────────────────────────────────────────────
-const savedLang = localStorage.getItem("lang");
-if (savedLang) lang = savedLang;
+/* ── Init ─────────────────────────────────────────────────────────── */
 setLang(lang);
-loadStatus();
-loadMyPledge();
+loadStatus(); loadMyPledge(); loadLeaderboard();
 setInterval(loadStatus, 10000);
 </script>
 </body>
