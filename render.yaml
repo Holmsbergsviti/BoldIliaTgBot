@@ -1,0 +1,18 @@
+services:
+  - type: worker
+    name: boldilia-bot
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python3 bot.py
+    envVars:
+      - key: BOT_TOKEN
+        sync: false          # you fill this in manually in Render dashboard
+      - key: DATABASE_URL
+        fromDatabase:
+          name: boldilia-db
+          property: connectionString
+
+databases:
+  - name: boldilia-db
+    databaseName: boldilia
+    user: boldilia
