@@ -194,6 +194,8 @@ async def broadcast_winner(ptb_app: Application, winner: dict):
 async def serve_index(request: web.Request) -> web.Response:
     return web.FileResponse(STATIC_DIR / "index.html")
 
+async def serve_ilia_png(request: web.Request) -> web.Response:
+    return web.FileResponse(STATIC_DIR / "ilia.png")
 
 # ── Telegram webhook ──────────────────────────────────────────────────────────
 
@@ -260,6 +262,7 @@ async def run():
     aio_app = web.Application()
     aio_app["ptb_app"] = ptb_app
     aio_app.router.add_get ("/",               serve_index)
+    aio_app.router.add_get ("/ilia.png",       serve_ilia_png)
     aio_app.router.add_post("/webhook",        webhook_handler)
     aio_app.router.add_get ("/api/status",     api_status)
     aio_app.router.add_get ("/api/leaderboard",api_leaderboard)

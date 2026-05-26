@@ -299,19 +299,40 @@ canvas#confetti-canvas{position:fixed;inset:0;z-index:500;pointer-events:none}
   <!-- ── WHEEL TAB ───────────────────────────── -->
   <div id="tab-wheel" class="tab-content">
 
-    <!-- Prize banner -->
+    <!-- Prize banner with shirt mockup -->
     <div style="
-      display:flex;align-items:center;gap:14px;
-      background:linear-gradient(135deg,rgba(124,58,237,.22),rgba(236,72,153,.22));
-      border:1px solid rgba(236,72,153,.4);border-radius:20px;
-      padding:16px 18px;margin-bottom:14px;
-      box-shadow:0 4px 24px rgba(124,58,237,.2);
+      background:linear-gradient(135deg,rgba(124,58,237,.18),rgba(236,72,153,.18));
+      border:1px solid rgba(236,72,153,.4);border-radius:24px;
+      padding:22px 18px 18px;margin-bottom:14px;text-align:center;
+      box-shadow:0 4px 30px rgba(124,58,237,.25);
     ">
-      <span style="font-size:3rem;line-height:1;flex-shrink:0">👕</span>
-      <div>
-        <div style="font-size:1rem;font-weight:900;margin-bottom:3px" data-i="prize_banner_title"></div>
-        <div style="font-size:.8rem;color:rgba(255,255,255,.5);line-height:1.5" data-i="prize_banner_sub"></div>
+      <!-- SVG t-shirt with printed image -->
+      <div style="margin:0 auto 14px;width:170px">
+        <svg viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;filter:drop-shadow(0 14px 36px rgba(0,0,0,.6)) drop-shadow(0 0 18px rgba(124,58,237,.4))">
+          <defs>
+            <clipPath id="printClip">
+              <rect x="50" y="73" width="100" height="108" rx="3"/>
+            </clipPath>
+          </defs>
+          <!-- Main shirt body (white) -->
+          <path d="M55,28 Q100,46 145,28 L170,12 L200,40 L184,68 L164,58 L164,228 L36,228 L36,58 L16,68 L0,40 L30,12 Z"
+                fill="#f2f2f2" stroke="#d4d4d4" stroke-width="1.5"/>
+          <!-- Collar depth shadow -->
+          <path d="M55,28 Q100,46 145,28 L141,33 Q100,50 59,33 Z"
+                fill="#c0c0c0" opacity="0.7"/>
+          <!-- Sleeve inner fold lines -->
+          <line x1="36" y1="58" x2="36" y2="148" stroke="#d0d0d0" stroke-width="1"/>
+          <line x1="164" y1="58" x2="164" y2="148" stroke="#d0d0d0" stroke-width="1"/>
+          <!-- Print area: Ilia image -->
+          <image href="/ilia.png" x="50" y="73" width="100" height="108"
+                 clip-path="url(#printClip)" preserveAspectRatio="xMidYMid slice"/>
+          <!-- Subtle print border -->
+          <rect x="50" y="73" width="100" height="108" rx="3"
+                fill="none" stroke="#bbb" stroke-width="0.8"/>
+        </svg>
       </div>
+      <div style="font-size:1.05rem;font-weight:900;margin-bottom:5px" data-i="prize_banner_title"></div>
+      <div style="font-size:.8rem;color:rgba(255,255,255,.5);line-height:1.6" data-i="prize_banner_sub"></div>
     </div>
 
     <div class="card">
@@ -744,7 +765,12 @@ function easeOut(t){ return 1-Math.pow(1-t,5); }
 
 // rAF loop
 function wheelRAFLoop(ts){
-  if(!isSpinning){ drawWheel(); return; }
+  if(!isSpinning){
+    if(!pendingWinner && wheelSlices.length > 0) wheelAngle += 0.002; // idle slow spin
+    drawWheel();
+    spinRAF=requestAnimationFrame(wheelRAFLoop);
+    return;
+  }
   if(!spinStartTS) spinStartTS=ts;
   const elapsed=ts-spinStartTS;
   const progress=Math.min(elapsed/SPIN_DUR,1);
