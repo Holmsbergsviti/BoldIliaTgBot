@@ -335,7 +335,7 @@ canvas#confetti-canvas{position:fixed;inset:0;z-index:500;pointer-events:none}
       <div style="font-size:.8rem;color:rgba(255,255,255,.5);line-height:1.6" data-i="prize_banner_sub"></div>
     </div>
 
-    <div class="card">
+    <div class="card" style="overflow:visible;padding-top:30px">
       <div class="card-title" data-i="wheel_card_title"></div>
       <div class="wheel-wrap">
         <canvas id="wheelCanvas"></canvas>
@@ -647,11 +647,13 @@ let spinFrom    = 0;
 let spinTo      = 0;
 const SPIN_DUR  = 7500; // ms
 
-// Resize wheel canvas
+// Resize wheel canvas — retina/HiDPI aware
 function resizeWheel(){
   const canvas=document.getElementById("wheelCanvas");
-  const size=canvas.offsetWidth;
-  canvas.width=size; canvas.height=size;
+  const dpr=window.devicePixelRatio||1;
+  const cssSize=canvas.offsetWidth;
+  canvas.width=Math.round(cssSize*dpr);
+  canvas.height=Math.round(cssSize*dpr);
   drawWheel();
 }
 window.addEventListener("resize",resizeWheel);
@@ -660,11 +662,15 @@ window.addEventListener("resize",resizeWheel);
 function drawWheel(){
   const canvas=document.getElementById("wheelCanvas");
   if(!canvas.width) return;
+  const dpr=window.devicePixelRatio||1;
   const ctx=canvas.getContext("2d");
   const W=canvas.width, H=canvas.height;
-  const cx=W/2, cy=H/2;
-  const r=Math.min(cx,cy)-18;
-  ctx.clearRect(0,0,W,H);
+  ctx.save();
+  ctx.scale(dpr,dpr);
+  const cssW=W/dpr, cssH=H/dpr;
+  const cx=cssW/2, cy=cssH/2;
+  const r=Math.min(cx,cy)-22;
+  ctx.clearRect(0,0,cssW,cssH);
 
   // Outer glow ring
   ctx.beginPath(); ctx.arc(cx,cy,r+10,0,Math.PI*2);
@@ -678,7 +684,7 @@ function drawWheel(){
     ctx.strokeStyle="rgba(255,255,255,0.1)"; ctx.lineWidth=2; ctx.stroke();
     ctx.fillStyle="rgba(255,255,255,0.2)"; ctx.font=`bold ${r*.14}px -apple-system,sans-serif`;
     ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillText("?", cx, cy);
-    drawPointer(ctx,cx,cy,r); return;
+    drawPointer(ctx,cx,cy,r); ctx.restore(); return;
   }
 
   let startAngle = wheelAngle - Math.PI/2;
@@ -733,21 +739,22 @@ function drawWheel(){
   ctx.strokeStyle="rgba(0,0,0,.3)"; ctx.lineWidth=2; ctx.stroke();
 
   drawPointer(ctx,cx,cy,r);
+  ctx.restore();
 }
 
 function drawPointer(ctx,cx,cy,r){
-  // Triangle pointing down into wheel at top
-  const tipY  = cy - r + 2;
-  const baseY = cy - r - 20;
+  // Triangle pointer at top, fully inside canvas
+  const tipY  = cy - r + 4;
+  const baseY = cy - r - 16;
   ctx.beginPath();
   ctx.moveTo(cx,   tipY);
-  ctx.lineTo(cx-11,baseY);
-  ctx.lineTo(cx+11,baseY);
+  ctx.lineTo(cx-12,baseY);
+  ctx.lineTo(cx+12,baseY);
   ctx.closePath();
   const pg=ctx.createLinearGradient(cx,baseY,cx,tipY);
   pg.addColorStop(0,"#fff"); pg.addColorStop(1,"#f59e0b");
   ctx.fillStyle=pg;
-  ctx.shadowColor="rgba(245,158,11,.9)"; ctx.shadowBlur=16;
+  ctx.shadowColor="rgba(245,158,11,.9)"; ctx.shadowBlur=12;
   ctx.fill(); ctx.shadowBlur=0;
   ctx.strokeStyle="rgba(0,0,0,.3)"; ctx.lineWidth=1.5; ctx.stroke();
 }
