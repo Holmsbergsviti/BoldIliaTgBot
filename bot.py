@@ -197,6 +197,9 @@ async def serve_index(request: web.Request) -> web.Response:
 async def serve_ilia_png(request: web.Request) -> web.Response:
     return web.FileResponse(STATIC_DIR / "ilia.png")
 
+async def serve_shirt_jpg(request: web.Request) -> web.Response:
+    return web.FileResponse(STATIC_DIR / "shirt.jpg")
+
 # ── Telegram webhook ──────────────────────────────────────────────────────────
 
 async def webhook_handler(request: web.Request) -> web.Response:
@@ -263,6 +266,7 @@ async def run():
     aio_app["ptb_app"] = ptb_app
     aio_app.router.add_get ("/",               serve_index)
     aio_app.router.add_get ("/ilia.png",       serve_ilia_png)
+    aio_app.router.add_get ("/shirt.jpg",      serve_shirt_jpg)
     aio_app.router.add_post("/webhook",        webhook_handler)
     aio_app.router.add_get ("/api/status",     api_status)
     aio_app.router.add_get ("/api/leaderboard",api_leaderboard)
