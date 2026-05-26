@@ -313,12 +313,12 @@ canvas#confetti-canvas{position:fixed;inset:0;z-index:500;pointer-events:none}
 
     <!-- Winner (permanent) -->
     <div class="winner-card" id="winnerCard">
-      <span class="winner-crown">👑</span>
+      <span class="winner-crown">👕</span>
       <div class="winner-title" data-i="winner_title"></div>
       <div class="winner-name"   id="winnerName"></div>
       <div class="winner-amount" id="winnerAmount"></div>
       <div class="winner-sub"    data-i="winner_sub"></div>
-      <div class="winner-stars">⭐ ⭐ ⭐</div>
+      <div class="winner-stars">👕 👕 👕</div>
     </div>
   </div><!-- /tab-wheel -->
 </div><!-- /content -->
@@ -348,7 +348,7 @@ const DEADLINE = new Date("2026-08-29T00:00:00Z");
 const T = {
   en:{
     tab_home:"Home", tab_wheel:"Wheel",
-    title:"Bald Ilia", sub:"Help us shave Ilia's head by August 29, 2026!",
+    title:"Bald Ilia", sub:"Top donor shaves Ilia's head 💈  •  Wheel winner gets a shirt 👕",
     progress:"Progress", goal_line:"Goal: 30,000 RSD",
     goal_reached:"🎉 Goal reached! Ilia is going bald!",
     time_left:"Time Left", days:"DAYS", hrs:"HRS", min:"MIN", sec:"SEC",
@@ -358,19 +358,20 @@ const T = {
     net_err:"Network error", confirm_remove:"Remove your pledge?",
     your_pledge:"Your pledge:", remove:"Remove",
     leaderboard:"Leaderboard 🏆", no_pledges:"No pledges yet — be the first!",
+    lb_top_badge:"💈 Shaves Ilia",
     donors_one:"donor", donors_many:"donors",
-    crown_title:"👑 New Leader!", crown_sub:"just took the top spot!", crown_close:"🔥 Let's go!",
-    wheel_card_title:"Raffle Wheel",
-    wheel_spins_on:"Wheel spins on",
-    wheel_bigger_pledge:"Bigger pledge = bigger slice = better odds!",
-    spin_btn:"🎡 Spin the Wheel!", spinning:"Spinning…",
-    winner_title:"Raffle Winner", winner_sub:"Bald Ilia Raffle · August 29, 2026",
-    crown_winner_title:"🎡 We have a winner!",
+    crown_title:"👑 New Leader!", crown_sub:"is now #1 and gets to shave Ilia's head!", crown_close:"🔥 Let's go!",
+    wheel_card_title:"Shirt Raffle 👕",
+    wheel_spins_on:"Shirt raffle spins on",
+    wheel_bigger_pledge:"Bigger pledge = bigger slice = better shirt odds!",
+    spin_btn:"🎡 Spin for the Shirt!", spinning:"Spinning…",
+    winner_title:"Shirt Winner 👕", winner_sub:"Wins the shirt! · Bald Ilia · Aug 29, 2026",
+    crown_winner_title:"🎡 Shirt winner!",
     pledged:"pledged",
   },
   ru:{
     tab_home:"Главная", tab_wheel:"Колесо",
-    title:"Лысый Илья", sub:"Поможем обрить Илью до 29 августа 2026!",
+    title:"Лысый Илья", sub:"Лидер по донатам бреет Илью 💈  •  Победитель колеса получает футболку 👕",
     progress:"Прогресс", goal_line:"Цель: 30 000 RSD",
     goal_reached:"🎉 Цель достигнута! Илья идёт бриться!",
     time_left:"Осталось", days:"ДН", hrs:"ЧАС", min:"МИН", sec:"СЕК",
@@ -380,14 +381,15 @@ const T = {
     net_err:"Ошибка сети", confirm_remove:"Удалить пожертвование?",
     your_pledge:"Ваше пожертвование:", remove:"Удалить",
     leaderboard:"Таблица лидеров 🏆", no_pledges:"Пока нет пожертвований — будь первым!",
+    lb_top_badge:"💈 Бреет Илью",
     donors_one:"участник", donors_many:"участников",
-    crown_title:"👑 Новый лидер!", crown_sub:"захватил первое место!", crown_close:"🔥 Огонь!",
-    wheel_card_title:"Колесо удачи",
-    wheel_spins_on:"Колесо вращается",
-    wheel_bigger_pledge:"Больше взнос = больше сектор = больше шансов!",
-    spin_btn:"🎡 Крутить колесо!", spinning:"Крутим…",
-    winner_title:"Победитель", winner_sub:"Розыгрыш Лысый Илья · 29 августа 2026",
-    crown_winner_title:"🎡 Есть победитель!",
+    crown_title:"👑 Новый лидер!", crown_sub:"на первом месте — бреет Илью!", crown_close:"🔥 Огонь!",
+    wheel_card_title:"Розыгрыш футболки 👕",
+    wheel_spins_on:"Розыгрыш футболки",
+    wheel_bigger_pledge:"Больше взнос = больше сектор = больше шансов на футболку!",
+    spin_btn:"🎡 Разыграть футболку!", spinning:"Крутим…",
+    winner_title:"Победитель 👕", winner_sub:"Получает футболку! · Лысый Илья · 29 авг 2026",
+    crown_winner_title:"🎡 Победитель футболки!",
     pledged:"пожертвовал",
   },
 };
@@ -565,7 +567,7 @@ function renderLeaderboard(rows){
     const div=document.createElement("div");div.className="lb-row";div.style.animationDelay=`${i*55}ms`;
     const name=r.name||(r.username?"@"+r.username:"—");
     const init=(name[0]||"?").toUpperCase();
-    div.innerHTML=`<span class="lb-rank">${medals[i]||(i+1)}</span><div class="lb-avatar">${esc(init)}</div><div class="lb-info"><div class="lb-name">${esc(name)}</div>${r.username?`<div class="lb-uname">@${esc(r.username)}</div>`:""}</div><span class="lb-amt">${r.amount.toLocaleString()} RSD</span>`;
+    div.innerHTML=`<span class="lb-rank">${medals[i]||(i+1)}</span><div class="lb-avatar">${esc(init)}</div><div class="lb-info"><div class="lb-name">${esc(name)}${i===0?` <span style="font-size:.65rem;background:linear-gradient(135deg,#f59e0b,#f97316);color:#000;border-radius:8px;padding:2px 7px;font-weight:800;vertical-align:middle;margin-left:4px">${t("lb_top_badge")}</span>`:""}</div>${r.username?`<div class="lb-uname">@${esc(r.username)}</div>`:""}</div><span class="lb-amt">${r.amount.toLocaleString()} RSD</span>`;
     lb.appendChild(div);
   });
 }

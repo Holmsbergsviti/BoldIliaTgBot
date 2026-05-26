@@ -174,8 +174,8 @@ async def broadcast_winner(ptb_app: Application, winner: dict):
     name = winner["name"] or (f"@{winner['username']}" if winner["username"] else "Someone")
     url  = WEBHOOK_URL or "https://example.com"
     text = (
-        "🎡 *The wheel has been spun!*\n\n"
-        f"👑 *{name}* wins the raffle!\n"
+        "🎡 *The shirt raffle wheel has been spun!*\n\n"
+        f"👕 *{name}* wins the shirt!\n"
         f"They pledged *{winner['amount']:,} RSD*\n\n"
         "Open the app to see the result! 🏆"
     )
@@ -184,7 +184,7 @@ async def broadcast_winner(ptb_app: Application, winner: dict):
             await ptb_app.bot.send_message(
                 cid, text, parse_mode=ParseMode.MARKDOWN,
                 reply_markup=InlineKeyboardMarkup([
-                    [InlineKeyboardButton("🎡 See Result", web_app=WebAppInfo(url=url))]
+                    [InlineKeyboardButton("👕 See Shirt Winner", web_app=WebAppInfo(url=url))]
                 ]),
             )
         except Exception as e:
@@ -216,8 +216,9 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await db.save_chat_id(chat_id)
     await update.message.reply_text(
         "💈 *Bald Ilia Campaign*\n\n"
-        "We're raising *30,000 RSD* to shave Ilia's head! 🧑‍🦲\n"
-        "Donors also enter a *raffle wheel* — bigger pledge = bigger slice! 🎡\n\n"
+        "We're raising *30,000 RSD* to shave Ilia's head!\n\n"
+        "• 💈 *Top donor* gets to shave Ilia's head!\n"
+        "• 👕 *Shirt raffle* — wheel spins on Aug 29, bigger pledge = bigger slice!\n\n"
         "Open the app below:",
         parse_mode=ParseMode.MARKDOWN,
         reply_markup=InlineKeyboardMarkup([
@@ -232,9 +233,10 @@ async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "🪒 *Bald Ilia — Help*\n\n"
         "🎯 Goal: *30,000 RSD*\n"
         "📅 Deadline: *August 29, 2026*\n\n"
-        "• If goal reached → Ilia shaves his head! 💈\n"
-        "• On the deadline → the raffle wheel spins! 🎡\n"
-        "• Bigger pledge = bigger wheel slice = better odds!",
+        "• 💈 If goal reached → Ilia shaves his head!\n"
+        "• 👑 *Top donor* gets to hold the razor!\n"
+        "• 👕 On the deadline → shirt raffle wheel spins!\n"
+        "• Bigger pledge = bigger wheel slice = better odds for the shirt!",
         parse_mode=ParseMode.MARKDOWN,
         reply_markup=InlineKeyboardMarkup([
             [InlineKeyboardButton("🪒 Open App", web_app=WebAppInfo(url=url))]
