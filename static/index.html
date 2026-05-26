@@ -298,6 +298,22 @@ canvas#confetti-canvas{position:fixed;inset:0;z-index:500;pointer-events:none}
 
   <!-- ── WHEEL TAB ───────────────────────────── -->
   <div id="tab-wheel" class="tab-content">
+
+    <!-- Prize banner -->
+    <div style="
+      display:flex;align-items:center;gap:14px;
+      background:linear-gradient(135deg,rgba(124,58,237,.22),rgba(236,72,153,.22));
+      border:1px solid rgba(236,72,153,.4);border-radius:20px;
+      padding:16px 18px;margin-bottom:14px;
+      box-shadow:0 4px 24px rgba(124,58,237,.2);
+    ">
+      <span style="font-size:3rem;line-height:1;flex-shrink:0">👕</span>
+      <div>
+        <div style="font-size:1rem;font-weight:900;margin-bottom:3px" data-i="prize_banner_title"></div>
+        <div style="font-size:.8rem;color:rgba(255,255,255,.5);line-height:1.5" data-i="prize_banner_sub"></div>
+      </div>
+    </div>
+
     <div class="card">
       <div class="card-title" data-i="wheel_card_title"></div>
       <div class="wheel-wrap">
@@ -361,12 +377,14 @@ const T = {
     lb_top_badge:"💈 Shaves Ilia",
     donors_one:"donor", donors_many:"donors",
     crown_title:"👑 New Leader!", crown_sub:"is now #1 and gets to shave Ilia's head!", crown_close:"🔥 Let's go!",
-    wheel_card_title:"Shirt Raffle 👕",
+    wheel_card_title:"Spin to Win 🎡",
     wheel_spins_on:"Shirt raffle spins on",
-    wheel_bigger_pledge:"Bigger pledge = bigger slice = better shirt odds!",
+    wheel_bigger_pledge:"Bigger pledge = bigger slice = better odds!",
     spin_btn:"🎡 Spin for the Shirt!", spinning:"Spinning…",
     winner_title:"Shirt Winner 👕", winner_sub:"Wins the shirt! · Bald Ilia · Aug 29, 2026",
     crown_winner_title:"🎡 Shirt winner!",
+    prize_banner_title:"🏆 Prize: An exclusive Bald Ilia shirt!",
+    prize_banner_sub:"Every donor spins the wheel.\nBigger pledge = bigger slice = better chance to win the shirt!",
     pledged:"pledged",
   },
   ru:{
@@ -384,12 +402,14 @@ const T = {
     lb_top_badge:"💈 Бреет Илью",
     donors_one:"участник", donors_many:"участников",
     crown_title:"👑 Новый лидер!", crown_sub:"на первом месте — бреет Илью!", crown_close:"🔥 Огонь!",
-    wheel_card_title:"Розыгрыш футболки 👕",
+    wheel_card_title:"Крути колесо 🎡",
     wheel_spins_on:"Розыгрыш футболки",
-    wheel_bigger_pledge:"Больше взнос = больше сектор = больше шансов на футболку!",
+    wheel_bigger_pledge:"Больше взнос = больше сектор = больше шансов!",
     spin_btn:"🎡 Разыграть футболку!", spinning:"Крутим…",
     winner_title:"Победитель 👕", winner_sub:"Получает футболку! · Лысый Илья · 29 авг 2026",
     crown_winner_title:"🎡 Победитель футболки!",
+    prize_banner_title:"🏆 Приз: эксклюзивная футболка Лысый Илья!",
+    prize_banner_sub:"Каждый донор участвует в розыгрыше.\nБольше взнос = больше сектор = больше шансов получить футболку!",
     pledged:"пожертвовал",
   },
 };
